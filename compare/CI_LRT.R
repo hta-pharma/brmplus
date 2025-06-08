@@ -24,9 +24,9 @@
 #' The \(95\%\) CI is the set of \(\theta_0\) with \(\Lambda(\theta_0)\le\chi^2_{1,0.95}\).
 #'
 
-profile <- function(y, x, va, vb, pars, se, pa, pb){
+profile <- function(param,y, x, va, vb, pars, se, pa, pb){
   ## real data
-  getProb = getProbRR
+  getProb = if (param == "RR") getProbRR else getProbRD
   alpha.ml = pars[1:pa]
   beta.ml = pars[(pa + 1):(pa + pb)]
   p0p1 = getProb(va * alpha.ml, vb %*% beta.ml)
@@ -51,7 +51,7 @@ profile <- function(y, x, va, vb, pars, se, pa, pb){
     }
     
     neg.log.likelihood.beta = function(beta){
-      p0p1 = getProbRR(va * alpha, vb %*% beta)
+      p0p1 = getProb(va * alpha, vb %*% beta)
       p0    = p0p1[,1];  p1 = p0p1[,2]
     
       
@@ -101,7 +101,7 @@ profile <- function(y, x, va, vb, pars, se, pa, pb){
     }
 
     neg.log.likelihood.beta0 = function(beta1){
-      p0p1 = getProbRR(va * alpha, vb %*% c(beta0,beta1))
+      p0p1 = getProb(va * alpha, vb %*% c(beta0,beta1))
       p0    = p0p1[,1];  p1 = p0p1[,2]
 
       return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
@@ -156,7 +156,7 @@ profile <- function(y, x, va, vb, pars, se, pa, pb){
     }
 
     neg.log.likelihood.beta1 = function(beta0){
-      p0p1 = getProbRR(va * alpha, vb %*% c(beta0,beta1))
+      p0p1 = getProb(va * alpha, vb %*% c(beta0,beta1))
       p0    = p0p1[,1];  p1 = p0p1[,2]
 
       return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
