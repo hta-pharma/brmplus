@@ -103,7 +103,7 @@ compare.brm <- function(data,pa,pb)
   #     trace  = TRUE)  
   
   ##brm+exact
-  est.exact <- exact(y, x, v.1, v, weight, max.step, thres, est.brm$point.est, est.brm$se.est, pa, pb)
+  est.exact <- exact('RR', y, x, v.1, v, weight, max.step, thres, est.brm$point.est, est.brm$se.est, pa, pb)
   
   ###result
   point.est <- c(est.brm$point.est[1],
