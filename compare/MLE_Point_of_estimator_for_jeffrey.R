@@ -35,7 +35,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0 = p0p1[, 1];   p1 = p0p1[, 2]
     
-    fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight)
+   if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] + 
                   (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x == 
@@ -49,7 +49,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
-    fisher  = var.mle.rr (x, alpha, beta, va, vb, weight)
+    if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
@@ -62,7 +62,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
-    fisher  = var.mle.rr (x, alpha, beta, va, vb, weight)
+    if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
