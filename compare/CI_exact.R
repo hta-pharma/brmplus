@@ -21,9 +21,9 @@
 #' @param pa Integer.  Number of \eqn{\alpha} parameters (\eqn{p_a}).
 #' @param pb Integer.  Number of \eqn{\beta} parameters (\eqn{p_b}).
 #'
-exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
+exact <- function(param,y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
   ## real data
-  getProb = getProbRR
+  getProb =if (param == "RR") getProbRR else getProbRD
   alpha.ml = pars[1:pa]
   alpha.ml = max(min(alpha.ml,12),-12)
   beta.ml = pars[(pa + 1):(pa + pb)]
@@ -50,7 +50,7 @@ exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
     }
     
     neg.log.likelihood.beta = function(beta){
-      p0p1 = getProbRR(va * alpha, vb %*% beta)
+      p0p1 = getProb(va * alpha, vb %*% beta)
       p0    = p0p1[,1];  p1 = p0p1[,2]
     
       
@@ -92,7 +92,7 @@ exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
     LRT.sim <- numeric(nsim)
     
     neg.log.likelihood.beta = function(beta){
-      p0p1 = getProbRR(va * alpha0, vb %*% beta)
+      p0p1 = getProb(va * alpha0, vb %*% beta)
       p0    = p0p1[,1];  p1 = p0p1[,2]
       
       
@@ -113,7 +113,7 @@ exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
     }
     
     # Fitted probabilities under (alpha0, beta.sim)
-    prob = getProbRR(va * alpha0, vb %*% beta.sim)
+    prob = getProb(va * alpha0, vb %*% beta.sim)
     p0 = prob[,1]; p1 = prob[,2]
     
     for(i in 1:nsim){
