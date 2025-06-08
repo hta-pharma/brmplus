@@ -25,6 +25,7 @@ exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
   ## real data
   getProb = getProbRR
   alpha.ml = pars[1:pa]
+  alpha.ml = max(min(alpha.ml,12),-12)
   beta.ml = pars[(pa + 1):(pa + pb)]
   p0p1 = getProb(va * alpha.ml, vb %*% beta.ml)
   p0.ml = p0p1[, 1  ];   p1.ml = p0p1[, 2]
@@ -77,7 +78,13 @@ exact <- function(y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
   }
   
   # Grid of candidate alpha0 values
-  alpha.seq <- seq(max(alpha.ml - 2*se[1],-12), min(alpha.ml + 2*se[1],12), length.out = 40)
+  alpha.seq <- c(seq(min(max(alpha.ml - 3*se[1],-12),12), max(min(alpha.ml - 2.5*se[1],12),-12), length.out = 5),
+                 seq(min(max(alpha.ml - 2.5*se[1],-12),12), max(min(alpha.ml - 1.5*se[1],12),-12), length.out = 30),
+                 seq(min(max(alpha.ml - 1.5*se[1],-12),12), max(min(alpha.ml+1.5*se[1],12),-12), length.out = 20),
+                 seq(min(max(alpha.ml + 1.5*se[1],-12),12), max(min(alpha.ml+2.5*se[1],12),-12), length.out = 30),
+                 seq(min(max(alpha.ml + 2.5*se[1],-12),12), max(min(alpha.ml + 3*se[1],12),-12), length.out = 5))
+  
+  alpha.seq <- alpha.seq[-union(which(alpha.seq==12), which(alpha.seq==-12))]
   
   # Simulate distribution of observed profile‐LRT statistic 
   ptail <- function(alpha0, nsim = 500){
