@@ -9,7 +9,7 @@
 #' @param vb Numeric matrix. Design matrix for the \code{beta} parameters (dimensions \code{n} × \code{pb}).
 #' @param alpha.start Numeric vector of length \code{pa}. Initial values for the \code{alpha} parameters.
 #' @param beta.start Numeric vector of length \code{pb}. Initial values for the \code{beta} parameters.
-#' @param weights Numeric vector of length \code{n}. Observation weights.
+#' @param weight Numeric vector of length \code{n}. Observation weight.
 #' @param max.step Integer. Maximum number of alternating optimization iterations.
 #' @param thres Numeric. Convergence threshold: the algorithm stops when the relative change in parameters falls below this value.
 #' @param pa Integer. Number of \code{alpha} parameters (length of \code{alpha.start}).
@@ -23,7 +23,7 @@
 #'   \item{\code{step}}{Integer. Number of iterations actually performed.}
 #' }
 #'
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weights, 
+max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
                           max.step, thres, pa, pb) {
     
     startpars = c(alpha.start, beta.start)
@@ -37,30 +37,30 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weights,
         p0p1 = getProb(va %*% alpha, vb %*% beta)
         p0 = p0p1[, 1];   p1 = p0p1[, 2]
         
-        return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weights[x == 0] + 
-                        (y[x == 0]) * log(p0[x == 0]) * weights[x == 0]) - sum((1 - y[x == 
-                                                                                          1]) * log(1 - p1[x == 1]) * weights[x == 1] + (y[x == 1]) * log(p1[x == 
-                                                                                                                                                                 1]) * weights[x == 1]))
+        return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] + 
+                        (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x == 
+                                                                                          1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x == 
+                                                                                                                                                                 1]) * weight[x == 1]))
     }
     
     neg.log.likelihood.alpha = function(alpha){
         p0p1 = getProb(va %*% alpha, vb %*% beta)
         p0    = p0p1[,1];  p1 = p0p1[,2]
         
-        return(-sum((1-y[x==0])*log(1-p0[x==0])*weights[x==0] +
-                        (y[x==0])*log(p0[x==0])*weights[x==0]) -
-                   sum((1-y[x==1])*log(1-p1[x==1])*weights[x==1] +
-                           (y[x==1])*log(p1[x==1])*weights[x==1]))  
+        return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
+                        (y[x==0])*log(p0[x==0])*weight[x==0]) -
+                   sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
+                           (y[x==1])*log(p1[x==1])*weight[x==1]))  
     }
     
     neg.log.likelihood.beta = function(beta){
         p0p1 = getProb(va %*% alpha, vb %*% beta)
         p0    = p0p1[,1];  p1 = p0p1[,2]
         
-        return(-sum((1-y[x==0])*log(1-p0[x==0])*weights[x==0] +
-                        (y[x==0])*log(p0[x==0])*weights[x==0]) -
-                   sum((1-y[x==1])*log(1-p1[x==1])*weights[x==1] +
-                           (y[x==1])*log(p1[x==1])*weights[x==1]))  
+        return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
+                        (y[x==0])*log(p0[x==0])*weight[x==0]) -
+                   sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
+                           (y[x==1])*log(p1[x==1])*weight[x==1]))  
     }
     
     
