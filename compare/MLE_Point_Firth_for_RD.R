@@ -1,4 +1,4 @@
-#' Maximum Likelihood Estimation for Relative‐Difference models with Firth's Augmentation
+#' Maximum Likelihood Estimation for Risk‐Difference models with Firth's Augmentation
 #'
 #' Firth's method: Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika, 80(1), 27-38.
 #'
