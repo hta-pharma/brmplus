@@ -3,7 +3,7 @@
 #'Firth's method: Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika, 80(1), 27-38.
 #'
 #' Optimize the log‐likelihood for a binary‐outcome regression model on the
-#' relative‐risk (RR) or risk‐difference (RD) scale using an iterative
+#' relative‐risk (RR) scale using an iterative
 #' augmentation scheme.
 #' 
 #' @param param Character string, takes\code{"RR"}
