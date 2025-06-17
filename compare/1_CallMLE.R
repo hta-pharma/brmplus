@@ -24,7 +24,9 @@ MLEst = function(param, y, x, va, vb, weight, max.step, thres, alpha.start,
         
         ### point estimate
         mle = max.likelihood(param, y, x, va, vb, alpha.start, beta.start, 
-            weight, max.step, thres, pa, pb)
+            weight, max.step, thres, pa, pb)  # This part uses the original method (brm), 
+                                              # but it can be replaced with the Firth method, the Jeffrey method, or the Jeffrey-for-parameter method.
+                                              # We can modify this section by adding a parameter called "method", and based on its value, call the corresponding function in "MLE_Point_...".
         point.est = mle$par
         converged = mle$convergence
         # print(point.est)
