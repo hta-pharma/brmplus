@@ -30,9 +30,13 @@ same = function(x, y, tolerance = .Machine$double.eps^0.5) {
 WrapResults = function(point.est, cov, param, name, va, vb, converged) {
     
     se.est = sqrt(diag(cov))
-    
+
+    # The following two lines use the original method (Wald) from the package, 
+    # but they can be replaced with the profile method(CI_LRT.R) or the exact method(CI_exact.R). 
+    # We can add an additional input parameter, such as "method_CI", 
+    # and based on its value, call the corresponding function from the "CI_..." file.
     conf.lower = point.est + stats::qnorm(0.025) * se.est
-    conf.upper = point.est + stats::qnorm(0.975) * se.est
+    conf.upper = point.est + stats::qnorm(0.975) * se.est    
     p.temp = stats::pnorm(point.est/se.est, 0, 1)
     p.value = 2 * pmin(p.temp, 1 - p.temp)
     
