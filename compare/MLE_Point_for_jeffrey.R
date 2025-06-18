@@ -61,6 +61,8 @@ fisher.rd = function(x, alpha.ml, beta.ml, va, vb, weight) {
 #' @param pb Integer.  Number of \(\beta\) parameters (\(p_b\)).
 #'
 
+# The difference between this file and "MLE_Point_of_estimator_for_jeffrey.R" lies in the function used to compute the Fisher information.
+# We can merge the two files by adding a conditional statement based on the value of argument "method".
 max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
                           max.step, thres, pa, pb) {
   
