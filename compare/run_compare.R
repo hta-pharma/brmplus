@@ -69,6 +69,22 @@ alpha.true <- 0
 beta.true  <- c(-4.7, 0.5)
 gamma.true <- c(0.2, -0.5)
 
+# values for param = 'RD'
+# alpha.true = 0.05
+# beta.true   = c(-5.5,0.2)
+# gamma.true  = c(0.2,-0.5)# rare
+# alpha.true = 0.1
+# beta.true   = c(0.9,0.2)
+# gamma.true  = c(0.2,-0.5) # common
+# alpha.true = 0
+# beta.true   = c(-4.5,0.5)
+# gamma.true  = c(0.2,-0.5) # rare null
+# alpha.true = 0
+# beta.true   = c(0.9,0.5)
+# gamma.true  = c(0.2,-0.5) #common null
+
+
+
 # 4. Set up a parallel backend
 ncores <- max(detectCores() - 1, 1)
 cat("Registering", ncores, "cores for parallel execution.\n")
