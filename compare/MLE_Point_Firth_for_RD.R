@@ -146,6 +146,16 @@ compute.augmentation <- function(components,va,vb){
   kbb = matrix(0,n,pb)
   b1.a = matrix(0,n,pa)
   b1.b = matrix(0,n,pb)
+  
+  # I’m using a four-level for loop bellow because the vectors k.stu and k.s.tu have lengths that are independent of the sample size and the number of parameters.
+  # During computation, the specific element to select depends on which group the indices s, t, and u belong to. 
+  # For example, if s, t, and u all correspond to columns from va, then k.stu is k.aaa and k.s.tu is k.a.aa. 
+  # If s and t correspond to va and u corresponds to vb, then k.stu is k.aab and k.s.tu is k.a.ab. 
+  # The three variables multiplied at the end also correspond to the combination of s, t, and u.
+  
+  # Is it possible to replace the for loop with another approach to speed up the code? 
+  # Functions in file "MLE_Point_Firth_for_RR" have same problem.
+  
   for(a1 in 1:pa){
     kaa[,a1] = 0
     for(a2 in 1:pa){
