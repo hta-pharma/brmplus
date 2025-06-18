@@ -1,3 +1,6 @@
+# This file contains the function packages required to run the code,
+# as well as the parameter values used under both regular and extreme scenarios.
+
 ###############################################################################
 # Example: Parallel Monte Carlo Comparison Estimators
 #
