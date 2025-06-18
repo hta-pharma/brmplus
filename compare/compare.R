@@ -52,6 +52,8 @@ data.generation <- function(n,alpha.true,beta.true,gamma.true){
 #'  @param pa Integer.  Number of \(\alpha\) covariates (including intercept)
 #'  @param pb Integer.  Number of \(\beta\) covariates (excluding intercept)
 #'
+
+# This function can be considered an example script. 
 compare.brm <- function(data,pa,pb)
 {
   y = data$data$y
@@ -63,10 +65,12 @@ compare.brm <- function(data,pa,pb)
   Na1 = data$sam[2]
   N0_1 = data$sam[3]
   N1_1 = data$sam[4]
-  
+
+  #The following "est.brm" part directly uses the original BRM method
   ##brm
   est.brm <- brm(y,x,v[,1:pa],v,'RR','MLE',v,TRUE)
 
+  # The following "est. " parts represent other comparable methods, which can also be incorporated as options under the "method" argument. 
   ##Cochran–Mantel–Haenszel
   sam.CMH <- matrix(c(Na0-N0_1,Na1-N1_1,N0_1,N1_1),2,2)
   est.CMH <- riskratio(sam.CMH, method="small", correction=TRUE)
@@ -81,6 +85,7 @@ compare.brm <- function(data,pa,pb)
 
   est.rlp <- quasi.poisson(data$data)
 
+  # The following "est.brm.firth" part calls the Firth method (MLE_Point_Firth_for_RR). 
   ##brm + firth correction
   weight = rep(1, length(y))
   max.step = min(pa * 20, 1000)
@@ -101,7 +106,8 @@ compare.brm <- function(data,pa,pb)
   #     type   = "AS_median",        # change to median‑BR；if use Firth, change type to "MPL_Jeffreys", but still have error "qr"
   #     brglmControl = ctrl,
   #     trace  = TRUE)  
-  
+
+  # The est.exact part serves as an example of calling the exact method (CI_exact).
   ##brm+exact
   est.exact <- exact('RR', y, x, v.1, v, weight, max.step, thres, est.brm$point.est, est.brm$se.est, pa, pb)
   
