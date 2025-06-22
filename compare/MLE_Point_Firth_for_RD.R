@@ -57,7 +57,7 @@ compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
   dp0.by.dphi = s0 * s1/(s0 + s1)
   dp0.by.drho = -s0/(s0 + s1)
   drho.by.dalpha = (1 - rho^2)
-  dphi.by.dbeta = 
+  dphi.by.dbeta = 1
   
   dpA.by.drho = dp0.by.drho + x
   dpA.by.dalpha = drho.by.dalpha * dpA.by.drho
