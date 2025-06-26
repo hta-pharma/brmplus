@@ -19,10 +19,10 @@ library(foreach)
 library(doRNG)
 
 library(brm)       # for Bayesian RR models (brm())
-library(epitools)  # for Cochran–Mantel–Haenszel (riskratio())
-library(sandwich)  # for robust (“sandwich”) variance (vcovHC)
-library(lmtest)    # for coeftest() with robust SE
-library(brglm2)    # for Firth‐corrected log‐binomial (glm(method="brglmFit"))
+#library(epitools)  # for Cochran–Mantel–Haenszel (riskratio())
+#library(sandwich)  # for robust (“sandwich”) variance (vcovHC)
+#library(lmtest)    # for coeftest() with robust SE
+#library(brglm2)    # for Firth‐corrected log‐binomial (glm(method="brglmFit"))
 library(MASS)      # for ginv() or solve() for Fisher information inversion
 
 # 2. Source custom functions (adjust these file paths as necessary on your system)
