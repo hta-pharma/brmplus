@@ -1,7 +1,7 @@
 #' Maximum Likelihood Estimation for Relative‐Risk models with Firth's Augmentation
 #'
 #'Firth's method: Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika, 80(1), 27-38.
-#'
+#' In the middle of page 29, the first-order bias of \hat{\theta}.
 #' Optimize the log‐likelihood for a binary‐outcome regression model on the
 #' relative‐risk (RR) scale using an iterative
 #' augmentation scheme.
