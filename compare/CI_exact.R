@@ -1,7 +1,7 @@
 #' Exact Confidence Interval and p‐value via Monte Carlo Profile LRT for Relative‐Risk Models
 #'
 #'Blaker, H. (2000). Confidence curves and improved exact confidence intervals for discrete distributions. Canadian Journal of Statistics, 28(4), 783-798.
-#'
+#'  https://doi.org/10.2307/3315916 (Theorem 1)
 #'#' @param y Numeric vector of length \eqn{n}.  Observed binary outcomes (0/1).
 #' @param x Numeric vector of length \eqn{n}.  Binary exposure indicator (0/1).
 #' @param va Numeric matrix of dimension \eqn{n \times p_a}.  Design matrix for
