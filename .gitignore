@@ -2,3 +2,8 @@ brm_1.1.tar.gz
 ..Rcheck
 brm.Rcheck
 *~
+.Rproj.user
+docker
+rstudio
+*.o
+*.so
