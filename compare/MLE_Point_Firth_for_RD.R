@@ -268,13 +268,13 @@ compute.score <- function(x, alpha.ml, beta.ml, va, vb){
 
 optim.alpha <- function(alpha,beta){
   score.intial = compute.score(x,alpha,beta,va,vb)
-  components = compute.components(x,alpha.true,beta.true,va,vb,weight)
+  components = compute.components(x,alpha,beta,va,vb,weight)
   augment.intial = compute.augmentation(components,va,vb)
   return(max((abs(score.intial[1:pa] + t(augment.intial)[1:pa]))))
 }
 optim.beta <- function(alpha,beta){
   score.intial = compute.score(x,alpha,beta,va,vb)
-  components = compute.components(x,alpha.true,beta.true,va,vb,weight)
+  components = compute.components(x,alpha,beta,va,vb,weight)
   augment.intial = compute.augmentation(components,va,vb)
   return(max((abs(score.intial[(pa+1):(pa+pb)] + t(augment.intial)[(pa+1):(pa+pb)]))))
 }
