@@ -69,21 +69,6 @@ alpha.true <- 0
 beta.true  <- c(-4.7, 0.5)
 gamma.true <- c(0.2, -0.5)
 
-# values for param = 'RD'
-# alpha.true = 0.05
-# beta.true   = c(-5.5,0.2)
-# gamma.true  = c(0.2,-0.5)# rare
-# alpha.true = 0.1
-# beta.true   = c(0.9,0.2)
-# gamma.true  = c(0.2,-0.5) # common
-# alpha.true = 0
-# beta.true   = c(-4.5,0.5)
-# gamma.true  = c(0.2,-0.5) # rare null
-# alpha.true = 0
-# beta.true   = c(0.9,0.5)
-# gamma.true  = c(0.2,-0.5) #common null
-
-
 
 # 4. Set up a parallel backend
 ncores <- max(detectCores() - 1, 1)
@@ -102,10 +87,12 @@ registerDoParallel(cl)
 #    based on its index r.  The range (R-249):R is just an example to show how
 #    you can simulate replicates  (R–249) through R.  If you truly want to run
 #    all R replicates, change that to 1:R instead.
-#
+
+n = 50 # 200, 500
+R = 1000
 result_list <- vector("list", length = R)
 result_list <- foreach(
-  r = (R - 249):R,                       # e.g. last 250 replicates
+  r = 1:R,                       # e.g. 1000 replicates
   .packages = c("brm", "epitools", "sandwich", "lmtest", "brglm2", "MASS"),
   .options.RNG = 1234) %dorng% {
   # Set a seed for this replicate
