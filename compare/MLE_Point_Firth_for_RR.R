@@ -144,24 +144,19 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     kbb = matrix(0,n,pb)
     b1.a = matrix(0,n,pa)
     b1.b = matrix(0,n,pb)
-    # todo: a lot of these small loops can probably be vectorized
     for(a1 in 1:pa){
       kaa[,a1] = 0
       kaa.m = k.rs[a1,a1]*(k.stu[,1] + k.s.tu[,1])*va[a1]*va[a1]*va[a1]
       kaa.m = kaa.m + k.rs[a1,pb]*(k.stu[,2] + k.s.tu[,2])*va[a1]*va[a1]*vb[,pb]
-      for (b3 in 1:pb) {
-        kaa.m = kaa.m + k.rs[b3,a1]*(k.stu[,2] + k.s.tu[,2])*va[a1]*vb[,b3]*va[a1]
-        kaa.m = kaa.m + k.rs[b3,pb]*(k.stu[,3] + k.s.tu[,3])*va[a1]*vb[,b3]*vb[,pb]
-      }
+      kaa.m = kaa.m + k.rs[pb,a1]*(k.stu[,2] + k.s.tu[,2])*va[a1]*vb[,pb]*va[a1]
+      kaa.m = kaa.m + k.rs[pb,pb]*(k.stu[,3] + k.s.tu[,3])*va[a1]*vb[,pb]*vb[,pb]
       kaa[,a1] = kaa[a1,] + k.rs[a1,a1]*kaa.m
       kab[,a1] = 0
       for(b2 in 1:pb) {
         kab.m = k.rs[a1,a1]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a1]*va[a1]
         kab.m = kab.m + k.rs[a1,pb]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a1]*vb[pb]
-        for (b3 in 1:pb) {
-          kab.m = kab.m + k.rs[b3,a1]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a1]
-          kab.m = kab.m + k.rs[b3,pb]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,pb]
-        }
+        kab.m = kab.m + k.rs[pb,a1]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,pb]*va[a1]
+        kab.m = kab.m + k.rs[pb,pb]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,pb]*vb[,pb]
         kab[,a1] = kab[,a1] + k.rs[a1,b2]*kab.m
       }
       b1.a[,a1] = kaa[,a1] + kab[,a1]
@@ -171,10 +166,8 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
       for(a2 in 1:pa){
         kba.m = k.rs[a2,a2]*(k.stu[,1] + k.s.tu[,1])*va[a2]*va[a2]*va[a2]
         kba.m = kba.m + k.rs[a2,pb]*(k.stu[,2] + k.s.tu[,2])*va[a2]*va[a2]*vb[,pb]
-        for (b3 in 1:pb) {
-          kba.m = kba.m + k.rs[b3,a2]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,b3]*va[a2]
-          kba.m = kba.m + k.rs[b3,pb]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,b3]*vb[,pb]
-        }
+        kba.m = kba.m + k.rs[pb,a2]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,pb]*va[a2]
+        kba.m = kba.m + k.rs[pb,pb]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,pb]*vb[,pb]
         kba[,b1] = kba[,b1] + k.rs[b1,a2]*kba.m
       }
       kbb[,b1] = 0
@@ -182,13 +175,9 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
         for(a2 in 1:pa){
           kbb.m = k.rs[a2,a2]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a2]*va[a2]
           kbb.m = kbb.m + k.rs[a2,pb]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a2]*vb[,pb]
+          kbb.m = kbb.m + k.rs[pb,a2]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,pb]*va[a2]
         }
-        for (b3 in 1:pb) {
-          for (a2 in 1:pa) {
-            kbb.m = kbb.m + k.rs[b3,a2]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a2]
-          }
-          kbb.m = kbb.m + k.rs[b3,pb]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,pb]
-        }
+        kbb.m = kbb.m + k.rs[pb,pb]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,pb]*vb[,pb]
         kbb[,b1] = kbb[,b1] + k.rs[b1,b2]*kbb.m
       }
       b1.b[,b1] = kba[,b1] + kbb[,b1]
