@@ -116,12 +116,12 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     ## k_{s,tu}
     
     
-    k.a.aa = c.stu.alpha*d2l.by.dalpha.2
-    k.a.ab = c.stu.alpha*d2l.by.dalpha.dbeta
-    k.a.bb = c.stu.alpha*d2l.by.dbeta.2
-    k.b.aa = c.stu.beta*d2l.by.dalpha.2
-    k.b.ab = c.stu.beta*d2l.by.dalpha.dbeta
-    k.b.bb = c.stu.beta*d2l.by.dbeta.2
+    k.a.aa = as.vector(c.stu.alpha*d2l.by.dalpha.2)
+    k.a.ab = as.vector(c.stu.alpha*d2l.by.dalpha.dbeta)
+    k.a.bb = as.vector(c.stu.alpha*d2l.by.dbeta.2)
+    k.b.aa = as.vector(c.stu.beta*d2l.by.dalpha.2)
+    k.b.ab = as.vector(c.stu.beta*d2l.by.dalpha.dbeta)
+    k.b.bb = as.vector(c.stu.beta*d2l.by.dbeta.2)
     
     
     return(list(fisher = fisher.info,fisher.invers = solve(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
