@@ -1,0 +1,50 @@
+---
+name: Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - master
+      - development
+      - cklamann/github-actions
+  push:
+    branches:
+      - master
+      - development
+      - cklamann/github-actions
+
+  workflow_dispatch:
+
+# when ready to release can use https://github.dev/insightsengineering/r.pkg.template/tree/main/.github/workflows
+jobs:
+
+  style:
+    name: Style Check
+    uses: insightsengineering/r.pkg.template/.github/workflows/style.yaml@main
+    with:
+      auto-update: false
+
+  unit-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/insightsengineering/rstudio
+    steps:
+        -
+          name: Checkout repo
+          uses: actions/checkout@v4.1.1
+        -
+          name: Build
+          run: |
+            Rscript -e "devtools::install()"
+        -
+          name: Test
+          run: |
+            Rscript -e "testthat::test_local()"
+
+
+
