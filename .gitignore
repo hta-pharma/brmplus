@@ -7,3 +7,4 @@ docker
 rstudio
 *.o
 *.so
+RcppExports.cpp
