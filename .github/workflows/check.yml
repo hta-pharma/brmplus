@@ -11,19 +11,16 @@ on:
     branches:
       - master
       - development
-      - cklamann/github-actions
   push:
     branches:
       - master
       - development
-      - cklamann/github-actions
 
   workflow_dispatch:
 
-# when ready to release can use https://github.dev/insightsengineering/r.pkg.template/tree/main/.github/workflows
 jobs:
-
   style:
+    if: github.event_name == 'pull_request'
     name: Style Check
     uses: insightsengineering/r.pkg.template/.github/workflows/style.yaml@main
     secrets:
