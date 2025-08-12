@@ -167,63 +167,63 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     kaa[,a1] = 0
     kaa.m = 0
     kaa.m = kaa.m +k.rs_1_1*k.stu_1_1*v_a_a_3
-    for (b4 in 1:pb) {
-      kaa.m = kaa.m + k.rs[a3,(1+b4)]*k.stu_2_2_v_a_a_2*vb[,b4]
+    for (b0 in 1:pb) {
+      kaa.m = kaa.m + k.rs[a3,(1+b0)]*k.stu_2_2_v_a_a_2*vb[,b0]
     }
-    for (b3 in 1:pb) {
-      kaa.m = kaa.m + k.rs[(1+b3),a4]*k.stu_2_2_v_a_a_2*vb[,b3]
-      for (b4 in 1:pb) {
-        kaa.m = kaa.m + k.rs[(1+b3),(1+b4)]*k.stu_3_3_v_a_a*vb[,b3]*vb[,b4]
+    for (b0 in 1:pb) {
+      kaa.m = kaa.m + k.rs[(1+b0),a4]*k.stu_2_2_v_a_a_2*vb[,b0]
+      for (b1 in 1:pb) {
+        kaa.m = kaa.m + k.rs[(1+b0),(1+b1)]*k.stu_3_3_v_a_a*vb[,b0]*vb[,b1]
       }
     }
     kaa[,a1] = kaa[a1,] + k.rs_1_1*kaa.m
 
     kab[,a1] = 0
-    for(b2 in 1:pb) {
+    for(b0 in 1:pb) {
       kab.m = 0
-      kab.m = kab.m + k.rs_1_1_k.stu_2_4*vb[,b2]*v_a_a_2
-      for (b4 in 1:pb) {
-        kab.m = kab.m + k.rs[a3,(1+b4)]*k.stu_3_5_v_a_a*vb[,b2]*vb[b4]
+      kab.m = kab.m + k.rs_1_1_k.stu_2_4*vb[,b0]*v_a_a_2
+      for (b1 in 1:pb) {
+        kab.m = kab.m + k.rs[a3,(1+b1)]*k.stu_3_5_v_a_a*vb[,b0]*vb[b1]
       }
-      for (b3 in 1:pb) {
-        kab.m = kab.m + k.rs[(1+b3),a4]*k.stu_3_5_v_a_a*vb[,b2]*vb[,b3]
-        for (b4 in 1:pb) {
-          kab.m = kab.m + k.rs[(1+b3),(1+b4)]*k.stu_4_6*vb[,b2]*vb[,b3]*vb[,b4]
+      for (b1 in 1:pb) {
+        kab.m = kab.m + k.rs[(1+b1),a4]*k.stu_3_5_v_a_a*vb[,b0]*vb[,b1]
+        for (b2 in 1:pb) {
+          kab.m = kab.m + k.rs[(1+b1),(1+b2)]*k.stu_4_6*vb[,b0]*vb[,b1]*vb[,b2]
         }
       }
-      kab[,a1] = kab[,a1] + k.rs[a1,(1+b2)]*kab.m
+      kab[,a1] = kab[,a1] + k.rs[a1,(1+b0)]*kab.m
     }
     b1.a[,a1] = kaa[,a1] + kab[,a1]
-    for(b1 in 1:pb){
-      kba[,b1] = 0
+    for(b0 in 1:pb){
+      kba[,b0] = 0
       kba.m = 0
-      kba.m = kba.m +k.rs_1_1*k.stu_1_1*v_a_a_3
-      for (b4 in 1:pb) {
-        kba.m = kba.m + k.rs[a3,(1+b4)]*k.stu_2_2_v_a_a_2*vb[,b4]
+      kba.m = kba.m + k.rs_1_1*k.stu_1_1*v_a_a_3
+      for (b1 in 1:pb) {
+        kba.m = kba.m + k.rs[a3,(1+b1)]*k.stu_2_2_v_a_a_2*vb[,b1]
       }
-      for (b3 in 1:pb) {
-        kba.m = kba.m + k.rs[(1+b3),a4]*k.stu_2_2_v_a_a_2*vb[,b3]
-        for (b4 in 1:pb) {
-          kba.m = kba.m + k.rs[(1+b3),b4]*k.stu_3_3_v_a_a*vb[,b3]*vb[,b4]
+      for (b1 in 1:pb) {
+        kba.m = kba.m + k.rs[(1+b1),a4]*k.stu_2_2_v_a_a_2*vb[,b1]
+        for (b2 in 1:pb) {
+          kba.m = kba.m + k.rs[(1+b1),b2]*k.stu_3_3_v_a_a*vb[,b1]*vb[,b2]
         }
       }
-      kba[,b1] = kba[,b1] + k.rs[(1+b1),a2]*kba.m
-      kbb[,b1] = 0
-      for(b2 in 1:pb) {
+      kba[,b0] = kba[,b0] + k.rs[(1+b0),a2]*kba.m
+      kbb[,b0] = 0
+      for(b1 in 1:pb) {
         kbb.m = 0
-        kbb.m = kbb.m +k.rs_1_1_k.stu_2_4*vb[,b2]*v_a_a_2
-        for (b4 in 1:pb) {
-          kbb.m = kbb.m + k.rs[a3,(1+b4)]*k.stu_3_5_v_a_a*vb[,b2]*vb[,b4]
+        kbb.m = kbb.m +k.rs_1_1_k.stu_2_4*vb[,b1]*v_a_a_2
+        for (b2 in 1:pb) {
+          kbb.m = kbb.m + k.rs[a3,(1+b2)]*k.stu_3_5_v_a_a*vb[,b1]*vb[,b2]
         }
-        for (b3 in 1:pb) {
-          kbb.m = kbb.m + k.rs[(1+b3),a4]*k.stu_3_5_v_a_a*vb[,b2]*vb[,b3]
-          for (b4 in 1:pb) {
-            kbb.m = kbb.m + k.rs[(1+b3),(1+b4)]*k.stu_4_6*vb[,b2]*vb[,b3]*vb[,b4]
+        for (b2 in 1:pb) {
+          kbb.m = kbb.m + k.rs[(1+b2),a4]*k.stu_3_5_v_a_a*vb[,b1]*vb[,b2]
+          for (b3 in 1:pb) {
+            kbb.m = kbb.m + k.rs[(1+b2),(1+b3)]*k.stu_4_6*vb[,b1]*vb[,b2]*vb[,b3]
           }
         }
-        kbb[,b1] = kbb[,b1] + k.rs[(1+b1),(1+b2)]*kbb.m
+        kbb[,b0] = kbb[,b0] + k.rs[(1+b0),(1+b1)]*kbb.m
       }
-      b1.b[,b1] = kba[,b1] + kbb[,b1]
+      b1.b[,b0] = kba[,b0] + kbb[,b0]
     }
     b1.a = colMeans(b1.a)
     b1.b = colMeans(b1.b)
