@@ -25,7 +25,7 @@
 #' @param pb Integer.  Number of \eqn{\beta} parameters (\eqn{pb}).
 #'
 
-max.likelihood.correct = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
+max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
   
   ### augmentation calculation, calculate the observed values of 
   # κ_{r,s}  = n^{-1} * E{ U_r, U_s }, κ_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }, and κ_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}
@@ -281,3 +281,4 @@ max.likelihood.correct = function(param, y, x, va, vb, alpha.start, beta.start, 
   
   return(opt)
 }
+
