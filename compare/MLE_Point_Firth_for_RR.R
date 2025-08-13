@@ -162,7 +162,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
             kaa.m = kaa.m + k.rs[(1+b3),(1+b4)]*(k.stu[,3] + k.s.tu[,3])*va[,a2]*vb[,b3]*vb[,b4]
           }
         }
-        kaa[,a1] = kaa[a1,] + k.rs[a1,a2]*kaa.m
+        kaa[,a1] = kaa[,a1] + k.rs[a1,a2]*kaa.m
       }
       kab[,a1] = 0
       for(b2 in 1:pb) {
@@ -282,5 +282,6 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
   
   return(opt)
 }
+
 
 
