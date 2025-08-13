@@ -38,72 +38,66 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
 compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
   
   
-  p0p1 = getProbRD(va * alpha.ml, vb %*% beta.ml)
+  p0p1 = getProbRD(va %*% alpha.ml, vb %*% beta.ml) #n by 2
   # p0p1 = cbind(p0, p1): n * 2 matrix
   p0 = p0p1[, 1]
   p1 = p0p1[, 2]
   n = nrow(vb)
   pA = p0
   pA[x == 1] = p1[x == 1]
-  s0 = p0 * (1 - p0)
-  s1 = p1 * (1 - p1)
-  sA = pA * (1 - pA)
+  # s0 = p0 * (1 - p0) # n by 1
+  # s1 = p1 * (1 - p1)
+  # sA = pA * (1 - pA)
+  s0 <- pmax(p0 * (1 - p0), 1e-8)
+  s1 <- pmax(p1 * (1 - p1), 1e-8)
+  sA <- pmax(pA * (1 - pA), 1e-8)
   
-  rho = as.vector(tanh(va * alpha.ml))  #estimated risk differences
+  
+  rho = as.vector(tanh(va %*% alpha.ml))  #estimated risk differences n by 1
   
   ### First order derivatives ###
+  va.1 = 1
+  vb.1 = 1
+  expect.dl.by.dpA = 1/sA # n by 1
+  dp0.by.dphi = s0 * s1/(s0 + s1) # n by 1
+  dp0.by.drho = -s0/(s0 + s1) # n by 1
+  drho.by.dalpha = va.1*(1 - rho^2) # n by 1
+  dphi.by.dbeta =vb.1
   
-  expect.dl.by.dpA = 1/sA
-  dp0.by.dphi = s0 * s1/(s0 + s1)
-  dp0.by.drho = -s0/(s0 + s1)
-  drho.by.dalpha = (1 - rho^2)
-  dphi.by.dbeta = 1
-  
-  dpA.by.drho = dp0.by.drho + x
-  dpA.by.dalpha = drho.by.dalpha * dpA.by.drho
-  dpA.by.dphi = dp0.by.dphi
-  dpA.by.dbeta = dphi.by.dbeta * dpA.by.dphi
+  dpA.by.drho = dp0.by.drho + x # n by 1
+  dpA.by.dalpha = drho.by.dalpha * dpA.by.drho # n by 1
+  dpA.by.dphi = dp0.by.dphi # n by 1
+  dpA.by.dbeta = dphi.by.dbeta * dpA.by.dphi # n by 1
   
   
   
   
   ### Second order derivatives ###
   
-  expect.d2l.by.dpA.2 = -(1 - 2*pA)^2/sA^2
-  d2pA.by.drho.2 = s0 * s1 * (2 - 2 * p0 - 2 * p1)/(s0 + s1)^3
-  d2pA.by.dphi.drho = (s0 * (1 - 2 * p1) - s1 * (1 - 2 * p0)) * s0 * s1/(s0 + 
-                                                                           s1)^3
-  d2pA.by.dphi.2 = (s0^2 * (1 - 2 * p1) + s1^2 * (1 - 2 * p0)) * s0 * s1/(s0 + 
-                                                                            s1)^3
+  expect.d2l.by.dpA.2 = -(1 - 2*pA)/sA^2 # n by 1
+  d2pA.by.drho.2 = s0 * s1 * (2 - 2 * p0 - 2 * p1)/(s0 + s1)^3 # n by 1
+  d2pA.by.dphi.drho = (s0 * (1 - 2 * p1) - s1 * (1 - 2 * p0)) * s0 * s1/(s0 + s1)^3 # n by 1
+  d2pA.by.dphi.2 = (s0^2 * (1 - 2 * p1) + s1^2 * (1 - 2 * p0)) * s0 * s1/(s0 +s1)^3 # n by 1
   
-  d2rho.by.dalpha.2 = -2 * t(va * rho) %*% drho.by.dalpha
+  d2rho.by.dalpha.2 = -2 * va.1 * rho * drho.by.dalpha # n by 1
   
   ### Compute elements of the Hessian matrix ###
   
-  d2l.by.dalpha.2 = t(dpA.by.dalpha * expect.d2l.by.dpA.2 * weight) %*% dpA.by.dalpha + 
-    t(drho.by.dalpha * expect.dl.by.dpA * d2pA.by.drho.2 * weight) %*% drho.by.dalpha - 
-    2 * t(va * rho * expect.dl.by.dpA * dpA.by.drho * weight) %*% drho.by.dalpha
+  d2l.by.dalpha.2 = dpA.by.dalpha * expect.d2l.by.dpA.2 * weight * dpA.by.dalpha + 
+    drho.by.dalpha * expect.dl.by.dpA * d2pA.by.drho.2 * weight * drho.by.dalpha - 
+    2 * va.1 * rho * expect.dl.by.dpA * dpA.by.drho * weight * drho.by.dalpha # n by 1
   
-  d2l.by.dalpha.dbeta = t(dpA.by.dalpha * expect.d2l.by.dpA.2 * weight) %*% dpA.by.dbeta + 
-    t(drho.by.dalpha * expect.dl.by.dpA * d2pA.by.dphi.drho * weight) %*% dphi.by.dbeta
-  d2l.by.dbeta.dalpha = t(d2l.by.dalpha.dbeta)
+  d2l.by.dalpha.dbeta = dpA.by.dalpha * expect.d2l.by.dpA.2 * weight * dpA.by.dbeta + 
+    drho.by.dalpha * expect.dl.by.dpA * d2pA.by.dphi.drho * weight * dphi.by.dbeta
+  d2l.by.dbeta.dalpha = d2l.by.dalpha.dbeta
   
-  d2l.by.dbeta.2 = t(dpA.by.dbeta * expect.d2l.by.dpA.2 * weight) %*% dpA.by.dbeta + 
-    t(dphi.by.dbeta * expect.dl.by.dpA * d2pA.by.dphi.2 * weight) %*% dphi.by.dbeta
-  
+  d2l.by.dbeta.2 = dpA.by.dbeta * expect.d2l.by.dpA.2 * weight * dpA.by.dbeta + 
+    dphi.by.dbeta * expect.dl.by.dpA * d2pA.by.dphi.2 * weight * dphi.by.dbeta
   
   ###
   
   
   ##  fisher info
-  expect.dl.by.dpA.squared = 1/sA
-  dp0.by.dphi = s0 * s1/(s0 + s1)
-  dp0.by.drho = -s0/(s0 + s1)
-  drho.by.dalpha = (1 - rho^2)
-  dphi.by.dbeta = 1
-  
-  tmp = cbind((dp0.by.drho + x) * drho.by.dalpha, dp0.by.dphi * dphi.by.dbeta)
-  fisher.info = (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
   
   ## k_{s,t,u}
   c.stu.A = (1-2*pA)/(sA^2)
@@ -126,14 +120,28 @@ compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
   k.b.ab = c.stu.beta*d2l.by.dalpha.dbeta
   k.b.bb = c.stu.beta*d2l.by.dbeta.2
   
+  expect.dl.by.dpA.squared = 1/sA
+  dp0.by.dphi = s0 * s1/(s0 + s1)
+  dp0.by.drho = -s0/(s0 + s1)
+  drho.by.dalpha = va*(1 - rho^2)
+  dphi.by.dbeta = vb
   
-  return(list(fisher = fisher.info,fisher.invers = solve(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+  tmp = cbind((dp0.by.drho + x) * drho.by.dalpha, dp0.by.dphi * dphi.by.dbeta)
+  # cat("Checking SVD input...\n")
+  # cat("Any NA in tmp:", any(is.na(tmp)), "\n")
+  # cat("Any Inf in tmp:", any(is.infinite(tmp)), "\n")
+  # cat("Any NA in weight:", any(is.na(weight)), "\n")
+  # cat("Any Inf in weight:", any(is.infinite(weight)), "\n")
+  # cat("Any NA in expect.dl.by.dpA.squared:", any(is.na(expect.dl.by.dpA.squared)), "\n")
+  # cat("Any Inf in expect.dl.by.dpA.squared:", any(is.infinite(expect.dl.by.dpA.squared)), "\n")
+  fisher.info = (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
+  
+  
+  return(list(fisher = fisher.info,fisher.invers = ginv(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
 }
 
-#' @param components A list as returned by \code{\link{compute.components}}.
-#' calculate κ^{r,s} κ^{t,u} (κ_{s,t,u} + κ_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
 compute.augmentation <- function(components,va,vb){
-  pa = 1
+  pa = ncol(va)
   pb = ncol(vb)
   n = dim(vb)[1]
   fisher = components$fisher
@@ -146,52 +154,42 @@ compute.augmentation <- function(components,va,vb){
   kbb = matrix(0,n,pb)
   b1.a = matrix(0,n,pa)
   b1.b = matrix(0,n,pb)
-  
-  # I’m using a four-level for loop bellow because the vectors k.stu and k.s.tu have lengths that are independent of the sample size and the number of parameters.
-  # During computation, the specific element to select depends on which group the indices s, t, and u belong to. 
-  # For example, if s, t, and u all correspond to columns from va, then k.stu is k.aaa and k.s.tu is k.a.aa. 
-  # If s and t correspond to va and u corresponds to vb, then k.stu is k.aab and k.s.tu is k.a.ab. 
-  # The three variables multiplied at the end also correspond to the combination of s, t, and u.
-  
-  # Is it possible to replace the for loop with another approach to speed up the code? 
-  # Functions in file "MLE_Point_Firth_for_RR" have same problem.
-  
   for(a1 in 1:pa){
     kaa[,a1] = 0
     for(a2 in 1:pa){
       kaa.m = 0
       for(a3 in 1:pa){
         for (a4 in 1:pa) {
-          kaa.m = kaa.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[a2]*va[a3]*va[a4]
+          kaa.m = kaa.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[,a2]*va[,a3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kaa.m = kaa.m + k.rs[a3,b4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*va[a3]*vb[,b4]
+          kaa.m = kaa.m + k.rs[a3,b4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*va[,a3]*vb[,b4]
         }
       }
       for (b3 in 1:pb) {
         for (a4 in 1:pa) {
-          kaa.m = kaa.m + k.rs[b3,a4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,b3]*va[a4]
+          kaa.m = kaa.m + k.rs[b3,a4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*vb[,b3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kaa.m = kaa.m + k.rs[b3,b4]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,b3]*vb[,b4]
+          kaa.m = kaa.m + k.rs[b3,b4]*(k.stu[,3] + k.s.tu[,3])*va[,a2]*vb[,b3]*vb[,b4]
         }
       }
-      kaa[,a1] = kaa[a1,] + k.rs[a1,a2]*kaa.m
+      kaa[,a1] = kaa[,a1] + k.rs[a1,a2]*kaa.m
     }
     kab[,a1] = 0
     for(b2 in 1:pb) {
       kab.m = 0
       for(a3 in 1:pa){
         for (a4 in 1:pa) {
-          kab.m = kab.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a3]*va[a4]
+          kab.m = kab.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[,a3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kab.m = kab.m + k.rs[a3,b4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a3]*vb[b4]
+          kab.m = kab.m + k.rs[a3,b4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[,a3]*vb[,b4]
         }
       }
       for (b3 in 1:pb) {
         for (a4 in 1:pa) {
-          kab.m = kab.m + k.rs[b3,a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a4]
+          kab.m = kab.m + k.rs[b3,a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[,a4]
         }
         for (b4 in 1:pb) {
           kab.m = kab.m + k.rs[b3,b4]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,b4]
@@ -207,18 +205,18 @@ compute.augmentation <- function(components,va,vb){
       kba.m = 0
       for(a3 in 1:pa){
         for (a4 in 1:pa) {
-          kba.m = kba.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[a2]*va[a3]*va[a4]
+          kba.m = kba.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[,a2]*va[,a3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kba.m = kba.m + k.rs[a3,b4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*va[a3]*vb[,b4]
+          kba.m = kba.m + k.rs[a3,b4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*va[,a3]*vb[,b4]
         }
       }
       for (b3 in 1:pb) {
         for (a4 in 1:pa) {
-          kba.m = kba.m + k.rs[b3,a4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,b3]*va[a4]
+          kba.m = kba.m + k.rs[b3,a4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*vb[,b3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kba.m = kba.m + k.rs[b3,b4]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,b3]*vb[,b4]
+          kba.m = kba.m + k.rs[b3,b4]*(k.stu[,3] + k.s.tu[,3])*va[,a2]*vb[,b3]*vb[,b4]
         }
       }
       kba[,b1] = kba[,b1] + k.rs[b1,a2]*kba.m
@@ -228,10 +226,10 @@ compute.augmentation <- function(components,va,vb){
       kbb.m = 0
       for(a3 in 1:pa){
         for (a4 in 1:pa) {
-          kbb.m = kbb.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a3]*va[a4]
+          kbb.m = kbb.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[,a3]*va[,a4]
         }
         for (b4 in 1:pb) {
-          kbb.m = kbb.m + k.rs[a3,b4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a3]*vb[,b4]
+          kbb.m = kbb.m + k.rs[a3,b4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[,a3]*vb[,b4]
         }
       }
       for (b3 in 1:pb) {
@@ -249,19 +247,26 @@ compute.augmentation <- function(components,va,vb){
   b1.a = colMeans(b1.a)
   b1.b = colMeans(b1.b)
   b1  = -c(b1.a,b1.b)/2
-  expect.A = -fisher%*%b1/n
+  expect.A = - fisher%*%b1/n
   return(expect.A)
 }
 
-### the score function for alpha and beta
 compute.score <- function(x, alpha.ml, beta.ml, va, vb){
-  p0p1 = getProbRR(va * alpha.ml, vb %*% beta.ml)
-  n = dim(vb)[1]
-  pA = rep(NA, n) 
-  pA[x == 0] = p0p1[x == 0, 1]
-  pA[x == 1] = p0p1[x == 1, 2]
-  score.alpha <- sum(((y-pA)/(1-pA))*(x-(1-p0p1[, 1])/((1-p0p1[, 1])+(1-p0p1[, 2])))*va)
-  score.beta <- colSums(((y-pA)/(1-pA))*(1 - p0p1[, 1]) * (1 - p0p1[, 2])/((1 - p0p1[, 1]) + (1 - p0p1[, 2]))*vb)
+  
+  p0p1 = getProbRD(va %*% alpha.ml, vb %*% beta.ml)
+  p0 = p0p1[, 1]
+  p1 = p0p1[, 2]
+  n = nrow(vb)
+  pA = p0
+  pA[x == 1] = p1[x == 1]
+  s0 = p0 * (1 - p0) # n by 1
+  s1 = p1 * (1 - p1)
+  sA = pA * (1 - pA)
+  
+  rho = as.vector(tanh(va * alpha.ml))
+  
+  score.alpha <- colSums(((y-pA)/sA)*(x-s0/(s0 + s1))*(1 - rho^2) * va)
+  score.beta <- colSums(((y-pA)/sA)*(s0 * s1/(s0 + s1))*vb)
   return(c(score.alpha,score.beta))
 }
 
@@ -270,14 +275,15 @@ optim.alpha <- function(alpha,beta){
   score.intial = compute.score(x,alpha,beta,va,vb)
   components = compute.components(x,alpha,beta,va,vb,weight)
   augment.intial = compute.augmentation(components,va,vb)
-  return(max((abs(score.intial[1:pa] + t(augment.intial)[1:pa]))))
+  return(max(abs(score.intial[1:pa] + t(augment.intial)[1:pa])))
 }
 optim.beta <- function(alpha,beta){
   score.intial = compute.score(x,alpha,beta,va,vb)
   components = compute.components(x,alpha,beta,va,vb,weight)
   augment.intial = compute.augmentation(components,va,vb)
-  return(max((abs(score.intial[(pa+1):(pa+pb)] + t(augment.intial)[(pa+1):(pa+pb)]))))
+  return(max(abs(score.intial[(pa+1):(pa+pb)] + t(augment.intial)[(pa+1):(pa+pb)])))
 }
+
 
   Diff = function(x,y) sum((x-y)^2)/sum(x^2+thres)
   alpha = alpha.start
