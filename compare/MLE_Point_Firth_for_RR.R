@@ -24,18 +24,15 @@
 #' @param pa Integer.  Number of \eqn{\alpha} parameters (\eqn{pa}).
 #' @param pb Integer.  Number of \eqn{\beta} parameters (\eqn{pb}).
 #'
-#' this model is for pa = 1 and pb = 2, if pa and pb change, or param change, the function
-#' 'compute.components', 'compute.augmentation' and 'compute.score' need to be changed. 
-#' If model change, 'compute.components' and 'compute.score' need to be changed. 
-#' 
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
+
+max.likelihood.correct = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
   
   ### augmentation calculation, calculate the observed values of 
   # κ_{r,s}  = n^{-1} * E{ U_r, U_s }, κ_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }, and κ_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}
   # with va and vb all equal to 1
   compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
     
-    p0p1 = getProbRR(va * alpha.ml, vb %*% beta.ml)
+    p0p1 = getProbRR(va %*% alpha.ml, vb %*% beta.ml)
     # p0p1 = cbind(p0, p1): n * 2 matrix
     p0 = p0p1[, 1]
     p1 = p0p1[, 2]
@@ -131,7 +128,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
   ### calculate κ^{r,s} κ^{t,u} (κ_{s,t,u} + κ_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
   
   compute.augmentation <- function(components,va,vb){
-    pa = 1
+    pa = ifelse(is.null(dim(va)),1,dim(va)[2])
     pb = ncol(vb)
     n = dim(vb)[1]
     fisher = components$fisher
@@ -150,18 +147,18 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
         kaa.m = 0
         for(a3 in 1:pa){
           for (a4 in 1:pa) {
-            kaa.m = kaa.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[a2]*va[a3]*va[a4]
+            kaa.m = kaa.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[,a2]*va[,a3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kaa.m = kaa.m + k.rs[a3,(1+b4)]*(k.stu[,2] + k.s.tu[,2])*va[a2]*va[a3]*vb[,b4]
+            kaa.m = kaa.m + k.rs[a3,(1+b4)]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*va[,a3]*vb[,b4]
           }
         }
         for (b3 in 1:pb) {
           for (a4 in 1:pa) {
-            kaa.m = kaa.m + k.rs[(1+b3),a4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,b3]*va[a4]
+            kaa.m = kaa.m + k.rs[(1+b3),a4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*vb[,b3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kaa.m = kaa.m + k.rs[(1+b3),(1+b4)]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,b3]*vb[,b4]
+            kaa.m = kaa.m + k.rs[(1+b3),(1+b4)]*(k.stu[,3] + k.s.tu[,3])*va[,a2]*vb[,b3]*vb[,b4]
           }
         }
         kaa[,a1] = kaa[a1,] + k.rs[a1,a2]*kaa.m
@@ -171,15 +168,15 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
         kab.m = 0
         for(a3 in 1:pa){
           for (a4 in 1:pa) {
-            kab.m = kab.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a3]*va[a4]
+            kab.m = kab.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[,a3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kab.m = kab.m + k.rs[a3,(1+b4)]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a3]*vb[b4]
+            kab.m = kab.m + k.rs[a3,(1+b4)]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[,a3]*vb[,b4]
           }
         }
         for (b3 in 1:pb) {
           for (a4 in 1:pa) {
-            kab.m = kab.m + k.rs[(1+b3),a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a4]
+            kab.m = kab.m + k.rs[(1+b3),a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[,a4]
           }
           for (b4 in 1:pb) {
             kab.m = kab.m + k.rs[(1+b3),(1+b4)]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,b4]
@@ -195,18 +192,18 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
         kba.m = 0
         for(a3 in 1:pa){
           for (a4 in 1:pa) {
-            kba.m = kba.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[a2]*va[a3]*va[a4]
+            kba.m = kba.m + k.rs[a3,a4]*(k.stu[,1] + k.s.tu[,1])*va[,a2]*va[,a3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kba.m = kba.m + k.rs[a3,(1+b4)]*(k.stu[,2] + k.s.tu[,2])*va[a2]*va[a3]*vb[,b4]
+            kba.m = kba.m + k.rs[a3,(1+b4)]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*va[,a3]*vb[,b4]
           }
         }
         for (b3 in 1:pb) {
           for (a4 in 1:pa) {
-            kba.m = kba.m + k.rs[(1+b3),a4]*(k.stu[,2] + k.s.tu[,2])*va[a2]*vb[,b3]*va[a4]
+            kba.m = kba.m + k.rs[(1+b3),a4]*(k.stu[,2] + k.s.tu[,2])*va[,a2]*vb[,b3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kba.m = kba.m + k.rs[(1+b3),b4]*(k.stu[,3] + k.s.tu[,3])*va[a2]*vb[,b3]*vb[,b4]
+            kba.m = kba.m + k.rs[(1+b3),b4]*(k.stu[,3] + k.s.tu[,3])*va[,a2]*vb[,b3]*vb[,b4]
           }
         }
         kba[,b1] = kba[,b1] + k.rs[(1+b1),a2]*kba.m
@@ -216,15 +213,15 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
         kbb.m = 0
         for(a3 in 1:pa){
           for (a4 in 1:pa) {
-            kbb.m = kbb.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[a3]*va[a4]
+            kbb.m = kbb.m + k.rs[a3,a4]*(k.stu[,2] + k.s.tu[,4])*vb[,b2]*va[,a3]*va[,a4]
           }
           for (b4 in 1:pb) {
-            kbb.m = kbb.m + k.rs[a3,(1+b4)]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[a3]*vb[,b4]
+            kbb.m = kbb.m + k.rs[a3,(1+b4)]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*va[,a3]*vb[,b4]
           }
         }
         for (b3 in 1:pb) {
           for (a4 in 1:pa) {
-            kbb.m = kbb.m + k.rs[(1+b3),a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a4]
+            kbb.m = kbb.m + k.rs[(1+b3),a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[,a4]
           }
           for (b4 in 1:pb) {
             kbb.m = kbb.m + k.rs[(1+b3),(1+b4)]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,b4]
@@ -243,12 +240,12 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
   
   ### the score function for alpha and beta
   compute.score <- function(x, alpha.ml, beta.ml, va, vb){
-    p0p1 = getProbRR(va * alpha.ml, vb %*% beta.ml)
+    p0p1 = getProbRR(va %*% alpha.ml, vb %*% beta.ml)
     n = dim(vb)[1]
     pA = rep(NA, n) 
     pA[x == 0] = p0p1[x == 0, 1]
     pA[x == 1] = p0p1[x == 1, 2]
-    score.alpha <- sum(((y-pA)/(1-pA))*(x-(1-p0p1[, 1])/((1-p0p1[, 1])+(1-p0p1[, 2])))*va)
+    score.alpha <- colSums(((y-pA)/(1-pA))*(x-(1-p0p1[, 1])/((1-p0p1[, 1])+(1-p0p1[, 2])))*va)
     score.beta <- colSums(((y-pA)/(1-pA))*(1 - p0p1[, 1]) * (1 - p0p1[, 2])/((1 - p0p1[, 1]) + (1 - p0p1[, 2]))*vb)
     return(c(score.alpha,score.beta))
   }
