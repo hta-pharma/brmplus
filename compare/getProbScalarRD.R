@@ -29,7 +29,7 @@ getProbScalarRD = function(atanhrd, logop) {
         atanhrd = atanhrd[1]
     }
     
-    if (logop > 350) {
+    if (logop > 12) {
         if (atanhrd < 0) {
             p0 = 1
             p1 = p0 + tanh(atanhrd)
@@ -38,6 +38,15 @@ getProbScalarRD = function(atanhrd, logop) {
             p0 = p1 - tanh(atanhrd)
         }
     } else {
+      if(logop < -12){
+        if (atanhrd < 0) {
+          p0 = -tanh(atanhrd)
+          p1 = 0
+        } else {
+          p1 = tanh(atanhrd)
+          p0 = 0 
+        }
+      } else {
         ## not on boundary logop = 0; solving linear equations
         if (same(logop, 0)) {
             p0 = 0.5 * (1 - tanh(atanhrd))
@@ -48,6 +57,7 @@ getProbScalarRD = function(atanhrd, logop) {
                 1))
         }
         p1 = p0 + tanh(atanhrd)
+      }
     }
     return(c(p0, p1))
 } 
@@ -81,19 +91,30 @@ getProbRD = function(atanhrd, logop) {
         logop = atanhrd[2]
         atanhrd = atanhrd[1]
     }
-    p0 <- ifelse (logop > 350,
+    p0 <- ifelse (logop > 12,
                   ifelse(atanhrd < 0,
                          1,
                          1 - tanh(atanhrd)),
                   ## not on boundary logop = 0; solving linear equations
-                  ifelse(same(logop, 0),
-                         0.5 * (1 - tanh(atanhrd)),
-                         (-(exp(logop) * (tanh(atanhrd) - 2) - tanh(atanhrd)) - sqrt((exp(logop) * (tanh(atanhrd) - 2) - tanh(atanhrd))^2 + 4 * exp(logop) * (1 - tanh(atanhrd)) * (1 - exp(logop))))/(2 * (exp(logop) - 1))))
-    p1 <- ifelse (logop > 350,
+                  ifelse(logop < -12,
+                         ifelse(atanhrd < 0,
+                                - tanh(atanhrd),
+                                0),
+                         ifelse(same(logop, 0),
+                                              0.5 * (1 - tanh(atanhrd)),
+                                              (-(exp(logop) * (tanh(atanhrd) - 2) - tanh(atanhrd)) - sqrt((exp(logop) * (tanh(atanhrd) - 2) - tanh(atanhrd))^2 + 4 * exp(logop) * (1 - tanh(atanhrd)) * (1 - exp(logop))))/(2 * (exp(logop) - 1)))))
+                  
+    p1 <- ifelse (logop > 12,
                   ifelse(atanhrd < 0,
                          1 + tanh(atanhrd),
                          1),
                   ## not on boundary logop = 0
-                  p0 + tanh(atanhrd))
+                  ifelse(logop < -12,
+                         ifelse(atanhrd < 0,
+                                0,
+                                tanh(atanhrd)),
+                         p0 + tanh(atanhrd))
+                  )
     cbind(p0,p1)
 }
+
