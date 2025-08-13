@@ -127,13 +127,6 @@ compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
   dphi.by.dbeta = vb
   
   tmp = cbind((dp0.by.drho + x) * drho.by.dalpha, dp0.by.dphi * dphi.by.dbeta)
-  # cat("Checking SVD input...\n")
-  # cat("Any NA in tmp:", any(is.na(tmp)), "\n")
-  # cat("Any Inf in tmp:", any(is.infinite(tmp)), "\n")
-  # cat("Any NA in weight:", any(is.na(weight)), "\n")
-  # cat("Any Inf in weight:", any(is.infinite(weight)), "\n")
-  # cat("Any NA in expect.dl.by.dpA.squared:", any(is.na(expect.dl.by.dpA.squared)), "\n")
-  # cat("Any Inf in expect.dl.by.dpA.squared:", any(is.infinite(expect.dl.by.dpA.squared)), "\n")
   fisher.info = (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
   
   
@@ -304,3 +297,4 @@ optim.beta <- function(alpha,beta){
   
   return(opt)
 }
+
