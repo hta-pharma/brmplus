@@ -10,6 +10,18 @@
 #' 
 #' @return a vector \eqn{(P(y=1|x=0),P(y=1|x=1))}
 #' 
+
+#' Calculate risks from arctanh RD and log OP
+#' 
+#' @param atanhrd arctanh of risk difference
+#' 
+#' @param logop log of odds product
+#' 
+#' @details The \eqn{log OP} is defined as \eqn{log OP = log[(P(y=1|x=0)/P(y=0|x=0))*(P(y=1|x=1)/P(y=0|x=1))]}. 
+#' The inverse hyperbolic tangent function \code{arctanh} is defined as \eqn{arctanh(z) = [log(1+z) - log(1-z)] / 2}. 
+#' 
+#' @return a vector \eqn{(P(y=1|x=0),P(y=1|x=1))}
+#' 
 #' @examples getProbScalarRD(0,0)
 #' 
 #' set.seed(0)
@@ -117,4 +129,3 @@ getProbRD = function(atanhrd, logop) {
                   )
     cbind(p0,p1)
 }
-
