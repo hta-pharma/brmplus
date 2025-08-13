@@ -61,7 +61,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     d2l.by.dtheta.2 = expect.d2l.by.dpsi0.2 * (dpsi0.by.dtheta + x)^2 + expect.dl.by.dpsi0 * 
       d2psi0.by.dtheta.2
     
-    d2l.by.dalpha.2 = t(dtheta.by.dalpha * d2l.by.dtheta.2 * weight) *
+    d2l.by.dalpha.2 = dtheta.by.dalpha * d2l.by.dtheta.2 * weight *
       dtheta.by.dalpha
     
     
@@ -72,9 +72,9 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     d2l.by.dtheta.dphi = expect.d2l.by.dpsi0.2 * (dpsi0.by.dtheta + x) * dpsi0.by.dphi + 
       expect.dl.by.dpsi0 * d2psi0.by.dtheta.dphi
     
-    d2l.by.dalpha.dbeta = t(dtheta.by.dalpha * d2l.by.dtheta.dphi * weight) * 
+    d2l.by.dalpha.dbeta = dtheta.by.dalpha * d2l.by.dtheta.dphi * weight * 
       dphi.by.dbeta
-    d2l.by.dbeta.dalpha = t(d2l.by.dalpha.dbeta)
+    d2l.by.dbeta.dalpha = d2l.by.dalpha.dbeta
     # d2l.by.dalpha.dbeta is symmetric itself if (because) va=vb
     
     
@@ -85,7 +85,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     
     d2l.by.dphi.2 = expect.d2l.by.dpsi0.2 * (dpsi0.by.dphi)^2 + expect.dl.by.dpsi0 * d2psi0.by.dphi.2
     
-    d2l.by.dbeta.2 = t(dphi.by.dbeta * d2l.by.dphi.2 * weight) * dphi.by.dbeta
+    d2l.by.dbeta.2 = dphi.by.dbeta * d2l.by.dphi.2 * weight * dphi.by.dbeta
     
     
     ###
@@ -123,6 +123,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     
     return(list(fisher = fisher.info,fisher.invers = solve(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
+  
   
   #' @param components A list as returned by \code{\link{compute.components}}.
   ### calculate κ^{r,s} κ^{t,u} (κ_{s,t,u} + κ_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
@@ -281,4 +282,5 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
   
   return(opt)
 }
+
 
