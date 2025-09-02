@@ -130,7 +130,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     k.stu = components$k.stu
     k.s.tu = components$k.s.tu
 
-    return(compute_augmentation_cpp(matrix(va), vb, fisher, k.rs, k.stu, k.s.tu))
+    return(compute_augmentation_cpp(va, vb, fisher, k.rs, k.stu, k.s.tu))
 
   }
 
