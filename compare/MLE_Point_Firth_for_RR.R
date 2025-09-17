@@ -25,7 +25,7 @@
 #' @param pb Integer.  Number of \eqn{\beta} parameters (\eqn{pb}).
 #'
 
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
+max.likelihood.firth.rr = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
 
   ### augmentation calculation, calculate the observed values of
   # κ_{r,s}  = n^{-1} * E{ U_r, U_s }, κ_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }, and κ_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}
@@ -121,7 +121,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     k.b.bb = as.vector(c.stu.beta*d2l.by.dbeta.2)
 
 
-    return(list(fisher = fisher.info,fisher.invers = ginv(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info,fisher.invers = MASS::ginv(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
 
   #' @param components A list as returned by \code{\link{compute.components}}.

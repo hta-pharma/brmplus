@@ -1,9 +1,9 @@
-#' Penalized Maximum‐Likelihood Estimation 
-#' 
+#' Penalized Maximum‐Likelihood Estimation
+#'
 #' Penalizing the log-likelihood function with the Jeffry's prior, but with the prior directly applied to p0,p1
-#' 
+#'
 #' Compute Determinant of Fisher Information for RR Model
-#' 
+#'
 #' @param x Binary exposure indicator (0/1).
 #' @param alpha.ml Numeric vector of length \(p_a\).  Fitted \(\alpha\) parameters.
 #' @param beta.ml Numeric vector of length \(p_b\).  Fitted \(\beta\) parameters.
@@ -13,17 +13,17 @@
 #'
 ### augmentation calculation
 fisher.rr = function(x, alpha.ml, beta.ml, va, vb, weight) {
-  
+
   p0p1 = getProbRR(va * alpha.ml, vb %*% beta.ml)
   p0 = p0p1[x == 0, 1]
   p1 = p0p1[x == 1, 2]
-  
+
   fisher.det = sum(p0*(1-p0))*sum(p1*(1-p1))
   return(fisher.det)
 }
 
 #' Compute Determinant of Fisher Information for RD Model
-#' 
+#'
 #' @param x Binary exposure indicator (0/1).
 #' @param alpha.ml Numeric vector of length \(p_a\).  Fitted \(\alpha\) parameters.
 #' @param beta.ml Numeric vector of length \(p_b\).  Fitted \(\beta\) parameters.
@@ -32,20 +32,20 @@ fisher.rr = function(x, alpha.ml, beta.ml, va, vb, weight) {
 #' @param weight Numeric vector of length \(n\).  Observation weight (not used in this simple approximation).
 #'
 fisher.rd = function(x, alpha.ml, beta.ml, va, vb, weight) {
-  
+
   p0p1 = getProbRD(va * alpha.ml, vb %*% beta.ml)
   p0 = p0p1[x == 0, 1]
   p1 = p0p1[x == 1, 2]
-  
+
   fisher.det = sum(p0*(1-p0))*sum(p1*(1-p1))
   return(fisher.det)
 }
 
-#' Penalized Maximum‐Likelihood Estimation 
-#' 
+#' Penalized Maximum‐Likelihood Estimation
+#'
 #' Penalizing the log-likelihood function with the Jeffry's prior, but with the prior directly applied to p0,p1
-#' 
-#' @param param Character scalar, either \code{"RR"} or \code{"RD"}.  
+#'
+#' @param param Character scalar, either \code{"RR"} or \code{"RD"}.
 #' @param y Numeric vector of length \(n\).  Binary outcomes (0/1).
 #' @param x Numeric vector of length \(n\).  Binary exposure indicator (0/1).
 #' @param va Numeric matrix \(n\times p_a\).
@@ -63,59 +63,59 @@ fisher.rd = function(x, alpha.ml, beta.ml, va, vb, weight) {
 
 # The difference between this file and "MLE_Point_of_estimator_for_jeffrey.R" lies in the function used to compute the Fisher information.
 # We can merge the two files by adding a conditional statement based on the value of argument "method".
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
+max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.start, weight,
                           max.step, thres, pa, pb) {
-  
+
   startpars = c(alpha.start, beta.start)
-  
+
   getProb = if (param == "RR") getProbRR else getProbRD
-  
+
   ## negative log likelihood function
   neg.log.likelihood = function(pars) {
     alpha = pars[1:pa]
     beta = pars[(pa + 1):(pa + pb)]
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0 = p0p1[, 1];   p1 = p0p1[, 2]
-    
+
     fisher.det  = fisher.rr (x, alpha.start, beta.start, va, vb, weight)
-    
-    return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] + 
-                  (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x == 
-                                                                                  1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x == 
+
+    return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] +
+                  (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x ==
+                                                                                  1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x ==
                                                                                                                                                        1]) * weight[x == 1])-
              log(fisher.det)/2)
-    
+
   }
-  
+
   neg.log.likelihood.alpha = function(alpha){
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
-    
+
     fisher.det  = fisher.rr (x, alpha.start, beta.start, va, vb, weight)
-    
+
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
              sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
                    (y[x==1])*log(p1[x==1])*weight[x==1])-
-             log(fisher.det)/2)  
+             log(fisher.det)/2)
   }
-  
+
   neg.log.likelihood.beta = function(beta){
     p0p1 = getProb(va * alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
-    
+
     fisher.det  = fisher.rr (x, alpha.start, beta.start, va, vb, weight)
-    
+
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
              sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
                    (y[x==1])*log(p1[x==1])*weight[x==1])-
-             log(fisher.det)/2)  
+             log(fisher.det)/2)
   }
-  
-  
-  ## Optimization 
-  
+
+
+  ## Optimization
+
   Diff = function(x,y) sum((x-y)^2)/sum(x^2+thres)
   alpha = alpha.start; beta = beta.start
   diff = thres + 1; step = 0
@@ -128,9 +128,9 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     diff  = max(diff1,Diff(opt2$par,beta))
     beta = opt2$par
   }
-  
-  opt = list(par = c(alpha,beta), convergence = (step < max.step), 
+
+  opt = list(par = c(alpha,beta), convergence = (step < max.step),
              value = neg.log.likelihood(c(alpha,beta)), step = step)
-  
+
   return(opt)
 }
