@@ -13,6 +13,7 @@ NeedsCompilation: yes
 Suggests:
     knitr,
     rmarkdown,
+    MASS,
     testthat (>= 3.0.0)
 Imports: Rcpp (>= 1.0.10), stats
 LinkingTo: Rcpp, RcppArmadillo
