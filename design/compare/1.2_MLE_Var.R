@@ -20,10 +20,9 @@
 
 var.mle.rr = function(x, alpha.ml, beta.ml, va, vb, weight) {
 
-    p0p1 = getProbRR(va * alpha.ml, vb %*% beta.ml)
+    p0p1 = getProbRR(va %*% alpha.ml, vb %*% beta.ml)
     n = dim(vb)[1]
     pA = rep(NA, n)
-    p0    = p0p1[,1];  p1 = p0p1[,2]
     pA[x == 0] = p0p1[x == 0, 1]
     pA[x == 1] = p0p1[x == 1, 2]
 
@@ -35,10 +34,6 @@ var.mle.rr = function(x, alpha.ml, beta.ml, va, vb, weight) {
     tmp = cbind((dpsi0.by.dtheta + x) * va, dpsi0.by.dphi * vb)
     ## since dtheta.by.dalpha = va, and dphi.by.dbeta = vb
     fisher.info = (t(expect.dl.by.dpsi0.squared * weight * tmp) %*% tmp)
-    # fis.eig = eigen(fisher.info)
-    # fis.va = fis.eig$values
-    # fis.ve = fis.eig$vectors
-    # fis.inv = fis.ve%*%diag(1/fis.va)%*%solve(fis.ve)
     return(MASS::ginv(fisher.info))
 }
 
@@ -71,10 +66,6 @@ var.mle.rd = function(x, alpha.ml, beta.ml, va, vb, weight) {
 
     tmp = cbind((dp0.by.drho + x) * drho.by.dalpha, dp0.by.dphi * dphi.by.dbeta)
     fisher.info = (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
-    # fis.eig = eigen(fisher.info)
-    # fis.va = fis.eig$values
-    # fis.ve = fis.eig$vectors
-    # fis.inv = fis.ve%*%diag(1/fis.va)%*%solve(fis.ve)
     return(MASS::ginv(fisher.info))
 }
 
