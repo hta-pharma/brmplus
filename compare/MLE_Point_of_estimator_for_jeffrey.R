@@ -21,7 +21,7 @@
 #' @param pa Integer.  Number of \eqn{\alpha} parameters (\eqn{p_a}).
 #' @param pb Integer.  Number of \eqn{\beta} parameters (\eqn{p_b}).
 #'
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
+max.likelihood.jeffrey = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
                           max.step, thres, pa, pb) {
   
   startpars = c(alpha.start, beta.start)
@@ -32,7 +32,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
   neg.log.likelihood = function(pars) {
     alpha = pars[1:pa]
     beta = pars[(pa + 1):(pa + pb)]
-    p0p1 = getProb(va * alpha, vb %*% beta)
+    p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0 = p0p1[, 1];   p1 = p0p1[, 2]
     
    if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
@@ -40,13 +40,13 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] + 
                   (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x == 
                                                                                   1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x == 
-                                                                                                                                                       1]) * weight[x == 1])-
-             log(det(fisher))/2) ### add the Jeefrey's prior
+                                                                                                                                                       1]) * weight[x == 1])+
+             log(det(fisher))/2) ### add the Jeffrey's prior
     
   }
   
   neg.log.likelihood.alpha = function(alpha){
-    p0p1 = getProb(va * alpha, vb %*% beta)
+    p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
     if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
@@ -54,12 +54,12 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
              sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
-                   (y[x==1])*log(p1[x==1])*weight[x==1])-
-             log(det(fisher))/2)  ### add the Jeefrey's prior
+                   (y[x==1])*log(p1[x==1])*weight[x==1])+
+             log(det(fisher))/2)  ### add the Jeffrey's prior
   }
   
   neg.log.likelihood.beta = function(beta){
-    p0p1 = getProb(va * alpha, vb %*% beta)
+    p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
     if (param == "RR") fisher  = var.mle.rr (x, alpha.start, beta.start, va, vb, weight) else  fisher  = var.mle.rd (x, alpha.start, beta.start, va, vb, weight)
@@ -67,7 +67,7 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
              sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
-                   (y[x==1])*log(p1[x==1])*weight[x==1])-
+                   (y[x==1])*log(p1[x==1])*weight[x==1])+
              log(det(fisher))/2)  ### add the Jeefrey's prior
   }
   
@@ -92,3 +92,4 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight,
   
   return(opt)
 }
+
