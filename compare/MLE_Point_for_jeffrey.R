@@ -13,7 +13,7 @@
 #' @param weight Numeric vector of length \(n\).  Observation weight (not used in this simple approximation).
 #'
 ### augmentation calculation
-fisher.det = function(param, x, alpha.ml, beta.ml, va, vb, weight) {
+fisher.detf = function(param, x, alpha.ml, beta.ml, va, vb, weight) {
   
   getProb = if (param == "RR") getProbRR else getProbRD
   
@@ -62,7 +62,7 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
     p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0 = p0p1[, 1];   p1 = p0p1[, 2]
     
-    fisher.det  = fisher.det(param, x, alpha.start, beta.start, va, vb, weight)
+    fisher.det  = fisher.detf(param, x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] + 
                   (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x == 
@@ -76,7 +76,7 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
     p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
-    fisher.det  = fisher.det(param, x, alpha.start, beta.start, va, vb, weight)
+    fisher.det  = fisher.detf(param, x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
@@ -89,7 +89,7 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
     p0p1 = getProb(va %*% alpha, vb %*% beta)
     p0    = p0p1[,1];  p1 = p0p1[,2]
     
-    fisher.det  = fisher.det(param, x, alpha.start, beta.start, va, vb, weight)
+    fisher.det  = fisher.detf(param, x, alpha.start, beta.start, va, vb, weight)
     
     return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
                   (y[x==0])*log(p0[x==0])*weight[x==0]) -
@@ -119,3 +119,4 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
   
   return(opt)
 }
+
