@@ -44,7 +44,7 @@ WrapResults = function(point.est, cov, param, name, va, vb, converged) {
     
     coefficients = cbind(point.est, se.est, conf.lower, conf.upper, p.value)
     
-    linear.predictors = va * point.est[1:length(va)]
+    linear.predictors = va %*% point.est[1:ncol(va)]
     if(param=="RR") param.est = exp(linear.predictors)
     if(param=="RD") param.est = linear.predictors
     if(param=="OR") param.est = expit(linear.predictors)
@@ -73,3 +73,4 @@ getPrbAux = function(x) {
            0.5 * exp(x) * (-1 + (1 + 4 * exp(-x))^0.5),
            ifelse(x<0, 0, 1))
 }
+
