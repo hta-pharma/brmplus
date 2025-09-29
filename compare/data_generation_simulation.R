@@ -389,7 +389,6 @@ simulate.rd <- function(n, event, hypothesis){
   }
   
   data.simulation <- data.generation('RD', n, alpha.true, beta.true, gamma.true)
-  
   va = as.matrix(data.simulation$data$v.1,ncol = 1)
   vb = cbind(data.simulation$data$v.1,data.simulation$data$v.2)
   y = data.simulation$data$y
@@ -398,6 +397,7 @@ simulate.rd <- function(n, event, hypothesis){
   Na1 = data.simulation$count[2]
   N0_1 = data.simulation$count[3]
   N1_1 = data.simulation$count[4]
+  
   P0 = N0_1/Na0
   P1 = N1_1/Na1
   
@@ -427,8 +427,8 @@ simulate.rd <- function(n, event, hypothesis){
   ## bayesian prior
   est.bayes = bayes_est_RD(Na0,Na1,N0_1,N1_1)
   
-  v.1 = v[,1]
-  v.2 = v[,2]
+  v.1 = vb[,1]
+  v.2 = vb[,2]
   ## GLM with identity link (calc_risk with identity link?)
   e.glm <- glm(y~x+v.1+v.2-1, family = binomial(link = "identity"), data = data.simulation$data,start = rep(0.01,3))
   est.glm <- get_estimate(e.glm$coefficients[1], summary(e.glm)$coefficients[1,2], as.numeric(confint.default(e.glm,level = 0.95)[1,]))
@@ -533,8 +533,8 @@ simulate.rd <- function(n, event, hypothesis){
   
   #### CI and p.value
   
-  est.exact.ad <- exact(y, x, v.1, v, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
-  est.exact <- exact(y, x, v.1, v, weight, max.step, thres, thres.dicho = 1e-3, est.brm.or$point.est, est.brm.or$se.est, pa, pb)
+  est.exact.ad <- exact('RD', y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
+  est.exact <- exact('RD', y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.or$point.est, est.brm.or$se.est, pa, pb)
   
   
   ###result
@@ -634,3 +634,4 @@ run <- function(param,n,event,hypothesis){
   result = simulate.fun(n,event,hypothesis)
   return(result)
 }
+
