@@ -227,7 +227,7 @@ compute.augmentation <- function(components,va,vb){
       }
       for (b3 in 1:pb) {
         for (a4 in 1:pa) {
-          kbb.m = kbb.m + k.rs[b3,a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[a4]
+          kbb.m = kbb.m + k.rs[b3,a4]*(k.stu[,3] + k.s.tu[,5])*vb[,b2]*vb[,b3]*va[,a4]
         }
         for (b4 in 1:pb) {
           kbb.m = kbb.m + k.rs[b3,b4]*(k.stu[,4] + k.s.tu[,6])*vb[,b2]*vb[,b3]*vb[,b4]
@@ -297,4 +297,5 @@ optim.beta <- function(alpha,beta){
   
   return(opt)
 }
+
 
