@@ -29,13 +29,16 @@ library(epiR)
 library(PropCIs)
 library(MASS)
 
-param = 'RD'
-n = 50
-event = 'rare'
-hypothesis = 'null'
-R = 10
-# ncores <- detectCores() - 1  # Use one less core than available
-ncores <- 5
+### Modifiable parameters
+param = 'RD'           # or 'RR'
+n = 50                 # or 200, 500
+event = 'rare'         # or 'common'
+hypothesis = 'null'    # or 'alternative'
+R = 10                 # change with Monte Carlo
+ncores <- 5           
+
+
+
 cl <- makeCluster(ncores)
 registerDoParallel(cl)
 
@@ -60,4 +63,5 @@ Sys.time()
 result.all <- do.call(rbind, lapply(result.mle, as.data.frame))
 
 write.csv(result.all, file = paste0("simulation_results_",param,"_",event,"_",hypothesis,"_n_", n, "_R_", R,".csv"))
+
 
