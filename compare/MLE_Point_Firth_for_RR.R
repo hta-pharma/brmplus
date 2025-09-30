@@ -121,13 +121,17 @@ max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, 
     k.b.bb = as.vector(c.stu.beta*d2l.by.dbeta.2)
 
 
-    return(list(fisher = fisher.info,fisher.invers = ginv(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info,fisher.invers = solve(fisher.info),k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb),k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
+
 
   #' @param components A list as returned by \code{\link{compute.components}}.
   ### calculate κ^{r,s} κ^{t,u} (κ_{s,t,u} + κ_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
 
   compute.augmentation <- function(components,va,vb){
+    pa = ifelse(is.null(dim(va)),1,dim(va)[2])
+    pb = ncol(vb)
+    n = dim(vb)[1]
     fisher = components$fisher
     k.rs = components$fisher.invers
     k.stu = components$k.stu

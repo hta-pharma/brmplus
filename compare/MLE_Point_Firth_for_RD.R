@@ -134,6 +134,9 @@ compute.components = function(x, alpha.ml, beta.ml, va, vb, weight) {
 }
 
 compute.augmentation <- function(components,va,vb){
+  pa = ncol(va)
+  pb = ncol(vb)
+  n = dim(vb)[1]
   fisher = components$fisher
   k.rs = components$fisher.invers
   k.stu = components$k.stu
