@@ -28,7 +28,7 @@
 #' If model change, 'compute.components' and 'compute.score' need to be changed. 
 #' 
 
-max.likelihood = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
+max.likelihood.firth.rd = function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
   ### augmentation calculation, compute:
   #'   - the observed Fisher information matrix,
   #'   - its inverse,
@@ -297,5 +297,6 @@ optim.beta <- function(alpha,beta){
   
   return(opt)
 }
+
 
 
