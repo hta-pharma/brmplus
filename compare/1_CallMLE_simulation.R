@@ -181,7 +181,7 @@ MLEst.jeffrey.est = function(param, y, x, va, vb, weight, max.step, thres, alpha
     # The following line uses the original method (brm), 
     # but it can be replaced with the Firth method(MLE_Point_Firth_for_'param'.R where 'param' can be 'RR' or 'RD"), the Jeffrey method(MLE_Point_for_jeffrey.R), or the Jeffrey-for-parameter method(MLE_Point_of estimator_for_jeffrey.R).
     # We can modify this section by adding an argument called "method", and based on its value, call the corresponding function in "MLE_Point_...".
-    mle = max.likelihood.jeffrey.est(param, y, x, va, vb, alpha.start, beta.start, 
+    mle = max.likelihood.jeffrey(param, y, x, va, vb, alpha.start, beta.start, 
                          weight, max.step, thres, pa, pb)  
     point.est = mle$par
     converged = mle$convergence
@@ -203,4 +203,5 @@ MLEst.jeffrey.est = function(param, y, x, va, vb, weight, max.step, thres, alpha
   return(sol)
   
 } 
+
 
