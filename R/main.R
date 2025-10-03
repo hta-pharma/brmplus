@@ -79,7 +79,7 @@
 #'
 #' Eric J. Tchetgen Tchetgen, James M. Robins and Andrea Rotnitzky. "On doubly robust estimation in a semiparametric odds ratio model." Biometrika 97.1 (2010): 171-180.
 #'
-#' @seealso \code{getProbScalarRD}, \code{getProbRD} (vectorised), \code{getProbScalarRR} and \code{getProbRR} (vectorised) for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
+#' @seealso \code{getProbRD}, and \code{getProbRR} for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
 #'
 #' \code{predict.blm} for obtaining fitted probabilities from \code{brm} fits.
 #'
