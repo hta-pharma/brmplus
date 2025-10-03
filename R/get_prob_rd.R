@@ -9,17 +9,17 @@
 #'
 #' @return a matrix \eqn{(P(y=1|x=0),P(y=1|x=1))} with two columns
 #'
-#' @examples getProbRD(0, 0)
+#' @examples get_prob_rd(0, 0)
 #'
 #' set.seed(0)
 #' logrr <- rnorm(10, 0, 1)
 #' logop <- rnorm(10, 0, 1)
-#' probs <- getProbRD(logrr, logop)
+#' probs <- get_prob_rd(logrr, logop)
 #' colnames(probs) <- c("P(y=1|x=0)", "P(y=1|x=1)")
 #' probs
 #'
 #' @export
-getProbRD <- function(atanhrd, logop) {
+get_prob_rd <- function(atanhrd, logop) {
   if (is.matrix(atanhrd) && ncol(atanhrd) == 2) {
     logop <- atanhrd[, 2]
     atanhrd <- atanhrd[, 1]

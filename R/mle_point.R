@@ -1,8 +1,8 @@
-max.likelihood <- function(param, y, x, va, vb, alpha.start, beta.start, weights,
+mle_point <- function(param, y, x, va, vb, alpha.start, beta.start, weights,
                            max.step, thres, pa, pb) {
   startpars <- c(alpha.start, beta.start)
 
-  getProb <- if (param == "RR") getProbRR else getProbRD
+  getProb <- if (param == "RR") get_prob_rr else get_prob_rd
 
   ## negative log likelihood function
   neg.log.likelihood <- function(pars) {

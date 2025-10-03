@@ -14,7 +14,7 @@ v.1 <- rep(1, n) # intercept term
 v.2 <- runif(n, -2, 2)
 v <- cbind(v.1, v.2)
 pscore.true <- exp(v %*% gamma.true) / (1 + exp(v %*% gamma.true))
-p0p1.true <- getProbRR(v %*% alpha.true, v %*% beta.true)
+p0p1.true <- get_prob_rr(v %*% alpha.true, v %*% beta.true)
 x <- rbinom(n, 1, pscore.true)
 pA.true <- p0p1.true[, 1]
 pA.true[x == 1] <- p0p1.true[x == 1, 2]

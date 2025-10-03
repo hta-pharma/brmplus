@@ -1,9 +1,9 @@
-Hessian2RD <- function(y, x, va, vb, alpha.ml, beta.ml, cnt) {
+hessian_2_rd <- function(y, x, va, vb, alpha.ml, beta.ml, cnt) {
   # calculating the Hessian using the second derivative have to do so
   # because under mis-specification of models Hessian no longer equals the
   # square of the first order derivatives
 
-  p0p1 <- getProbRD(va %*% alpha.ml, vb %*% beta.ml)
+  p0p1 <- get_prob_rd(va %*% alpha.ml, vb %*% beta.ml)
   # p0p1 = cbind(p0, p1): n * 2 matrix
   p0 <- p0p1[, 1]
   p1 <- p0p1[, 2]

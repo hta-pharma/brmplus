@@ -56,7 +56,7 @@ brm(
 }
 \value{
 A list consisting of
- \item{param}{the measure of association.} 
+ \item{param}{the measure of association.}
 
 \item{point.est}{ the point estimates.}
 
@@ -84,13 +84,13 @@ A list consisting of
 \code{brm} is used to estimate the association between two binary variables, and how that varies as a function of other covariates.
 }
 \details{
-\code{brm} contains two parts: the target model for the dependence measure (RR, RD or OR) and the nuisance model; the latter is required for maximum likelihood estimation. 
-If \code{param="RR"} then the target model is \eqn{log RR(va) = \alpha*va}. 
-If \code{param="RD"} then the target model is \eqn{atanh RD(va) = \alpha*va}. 
-If \code{param="OR"} then the target model is \eqn{log OR(va) = \alpha*va}. 
-For RR and RD, the nuisance model is for the log Odds Product: \eqn{log OP(vb) = \beta*vb}. 
+\code{brm} contains two parts: the target model for the dependence measure (RR, RD or OR) and the nuisance model; the latter is required for maximum likelihood estimation.
+If \code{param="RR"} then the target model is \eqn{log RR(va) = \alpha*va}.
+If \code{param="RD"} then the target model is \eqn{atanh RD(va) = \alpha*va}.
+If \code{param="OR"} then the target model is \eqn{log OR(va) = \alpha*va}.
+For RR and RD, the nuisance model is for the log Odds Product: \eqn{log OP(vb) = \beta*vb}.
 For OR, the nuisance model is for the baseline risk: \eqn{logit(P(y=1|x=0,vb)) = \beta*vb.}
-In each case the nuisance model is variation independent of the target model, which  ensures that the predicted probabilities lie in \eqn{[0,1]}. 
+In each case the nuisance model is variation independent of the target model, which  ensures that the predicted probabilities lie in \eqn{[0,1]}.
 See Richardson et al. (2016+) for more details.
 
 If \code{est.method="DR"} then given a correctly specified logistic regression model for the propensity score \eqn{logit(P(x=1|vc)) = \gamma*vc}, estimation of the RR or RD is consistent, even if the log Odds Product model is misspecified. This estimation method is not available for the OR. See Tchetgen Tchetgen et al. (2014) for more details.
@@ -101,27 +101,29 @@ For the doubly robust estimation method, MLE is used to obtain preliminary estim
 }
 \examples{
 set.seed(0)
-n           = 100
-alpha.true  = c(0,-1)
-beta.true   = c(-0.5,1)
-gamma.true  = c(0.1,-0.5)
-params.true = list(alpha.true=alpha.true, beta.true=beta.true, 
-     gamma.true=gamma.true)
-v.1         = rep(1,n)       # intercept term
-v.2         = runif(n,-2,2) 
-v           = cbind(v.1,v.2)
-pscore.true = exp(v \%*\% gamma.true) / (1+exp(v \%*\% gamma.true))
-p0p1.true   = getProbRR(v \%*\% alpha.true,v \%*\% beta.true)
-x           = rbinom(n, 1, pscore.true)  
-pA.true       = p0p1.true[,1]
-pA.true[x==1] = p0p1.true[x==1,2]
-y = rbinom(n, 1, pA.true)
+n <- 100
+alpha.true <- c(0, -1)
+beta.true <- c(-0.5, 1)
+gamma.true <- c(0.1, -0.5)
+params.true <- list(
+  alpha.true = alpha.true, beta.true = beta.true,
+  gamma.true = gamma.true
+)
+v.1 <- rep(1, n) # intercept term
+v.2 <- runif(n, -2, 2)
+v <- cbind(v.1, v.2)
+pscore.true <- exp(v \%*\% gamma.true) / (1 + exp(v \%*\% gamma.true))
+p0p1.true <- get_prob_rr(v \%*\% alpha.true, v \%*\% beta.true)
+x <- rbinom(n, 1, pscore.true)
+pA.true <- p0p1.true[, 1]
+pA.true[x == 1] <- p0p1.true[x == 1, 2]
+y <- rbinom(n, 1, pA.true)
 
-fit.mle = brm(y,x,v,v,'RR','MLE',v,TRUE)
-fit.drw = brm(y,x,v,v,'RR','DR',v,TRUE)
-fit.dru = brm(y,x,v,v,'RR','DR',v,FALSE)
+fit.mle <- brm(y, x, v, v, "RR", "MLE", v, TRUE)
+fit.drw <- brm(y, x, v, v, "RR", "DR", v, TRUE)
+fit.dru <- brm(y, x, v, v, "RR", "DR", v, FALSE)
 
-fit.mle2 = brm(y,x,~v.2, ~v.2, 'RR','MLE', ~v.2,TRUE) # same as fit.mle
+fit.mle2 <- brm(y, x, ~v.2, ~v.2, "RR", "MLE", ~v.2, TRUE) # same as fit.mle
 
 }
 \references{
@@ -130,9 +132,9 @@ Thomas S. Richardson, James M. Robins and Linbo Wang. "On Modeling and Estimatio
 Eric J. Tchetgen Tchetgen, James M. Robins and Andrea Rotnitzky. "On doubly robust estimation in a semiparametric odds ratio model." Biometrika 97.1 (2010): 171-180.
 }
 \seealso{
-\code{getProbScalarRD}, \code{getProbRD} (vectorised), \code{getProbScalarRR} and \code{getProbRR} (vectorised) for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
+\code{get_prob_rd}, and \code{get_prob_rr} for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
 
-\code{predict.blm} for obtaining fitted probabilities from \code{brm} fits.
+\code{predict.brm} for obtaining fitted probabilities from \code{brm} fits.
 }
 \author{
 Linbo Wang <linbo.wang@utoronto.ca>, Mark Clements <mark.clements@ki.se>, Thomas Richardson <thomasr@uw.edu>
