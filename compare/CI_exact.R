@@ -63,7 +63,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
   getProb =if (param == "RR") getProbRR else getProbRD
   alpha.ml = pars[1:pa]
   beta.ml = pars[(pa + 1):(pa + pb)]
-  p0p1 = getProb(va %*% alpha.ml, vb %*% beta.ml)
+  p0p1 = getProb(mat_vec_mul(va, alpha.ml), mat_vec_mul(vb, beta.ml))
   p0.ml = p0p1[, 1];   p1.ml = p0p1[, 2]
   ## profile
 
@@ -75,7 +75,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
     neg.log.likelihood = function(pars) {
       alpha = pars[1:pa]
       beta = pars[(pa + 1):(pa + pb)]
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
+      p0p1 = getProb(mat_vec_mul(va, alpha), mat_vec_mul(vb, beta))
       p0 = p0p1[, 1];   p1 = p0p1[, 2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
@@ -88,7 +88,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
     }
 
     neg.log.likelihood.alpha = function(alpha){
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
+      p0p1 = getProb(mat_vec_mul(va, alpha), mat_vec_mul(vb, beta))
       p0    = p0p1[,1];  p1 = p0p1[,2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
@@ -101,7 +101,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
     }
 
     neg.log.likelihood.beta = function(beta){
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
+      p0p1 = getProb(mat_vec_mul(va, alpha), mat_vec_mul(vb, beta))
       p0    = p0p1[,1];  p1 = p0p1[,2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
@@ -187,7 +187,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
     }
 
     # Fitted probabilities under (alpha0, beta.sim)
-    prob = getProb(va %*% alpha.sim, vb %*% beta.sim)
+    prob = getProb(mat_vec_mul(va, alpha.sim), mat_vec_mul(vb, beta.sim))
     p0 = prob[,1]; p1 = prob[,2]
 
     for(i in 1:nsim){
@@ -196,6 +196,7 @@ exact <- function(param,y, x, va, vb, weight, max.step, thres, thres.dicho, pars
       y.sim[x == 1] <- rbinom(sum(x == 1), 1, p1[x == 1])
       LRT.sim[i] <- LRT.alpha(alphaj, j, y.sim)
     }
+
     return(LRT.sim)
   }
 
