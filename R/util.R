@@ -27,33 +27,33 @@ same <- function(x, y, tolerance = .Machine$double.eps^0.5) {
 
 
 ## Functions for wrapping estimation results into a nice format
-wrap_results <- function(point.est, cov, param, name, va, vb, converged) {
-  se.est <- sqrt(diag(cov))
+wrap_results <- function(point_est, cov, param, name, va, vb, converged) {
+  se_est <- sqrt(diag(cov))
 
-  conf.lower <- point.est + stats::qnorm(0.025) * se.est
-  conf.upper <- point.est + stats::qnorm(0.975) * se.est
-  p.temp <- stats::pnorm(point.est / se.est, 0, 1)
-  p.value <- 2 * pmin(p.temp, 1 - p.temp)
+  conf_lower <- point_est + stats::qnorm(0.025) * se_est
+  conf_upper <- point_est + stats::qnorm(0.975) * se_est
+  p_temp <- stats::pnorm(point_est / se_est, 0, 1)
+  p_value <- 2 * pmin(p_temp, 1 - p_temp)
 
-  names(point.est) <- names(se.est) <- rownames(cov) <- colnames(cov) <- names(conf.lower) <- names(conf.upper) <- names(p.value) <- name
+  names(point_est) <- names(se_est) <- rownames(cov) <- colnames(cov) <- names(conf_lower) <- names(conf_upper) <- names(p_value) <- name
 
-  coefficients <- cbind(point.est, se.est, conf.lower, conf.upper, p.value)
+  coefficients <- cbind(point_est, se_est, conf_lower, conf_upper, p_value)
 
-  linear.predictors <- va %*% point.est[1:ncol(va)]
-  if (param == "RR") param.est <- exp(linear.predictors)
-  if (param == "RD") param.est <- linear.predictors
-  if (param == "OR") param.est <- expit(linear.predictors)
+  linear_predictors <- va %*% point_est[1:ncol(va)]
+  if (param == "RR") param_est <- exp(linear_predictors)
+  if (param == "RD") param_est <- linear_predictors
+  if (param == "OR") param_est <- expit(linear_predictors)
 
   sol <- list(
-    param = param, point.est = point.est, se.est = se.est, cov = cov,
-    conf.lower = conf.lower, conf.upper = conf.upper, p.value = p.value,
-    coefficients = coefficients, param.est = param.est, va = va, vb = vb,
+    param = param, point_est = point_est, se_est = se_est, cov = cov,
+    conf_lower = conf_lower, conf_upper = conf_upper, p_value = p_value,
+    coefficients = coefficients, param_est = param_est, va = va, vb = vb,
     converged = converged
   )
   class(sol) <- c("brm", "list")
   attr(sol, "hidden") <- c(
-    "param", "se.est", "cov", "conf.lower", "conf.upper",
-    "p.value", "coefficients", "param.est", "va", "vb", "converged"
+    "param", "se_est", "cov", "conf_lower", "conf_upper",
+    "p_value", "coefficients", "param_est", "va", "vb", "converged"
   )
 
   return(sol)
@@ -74,8 +74,8 @@ get_prb_aux <- function(x) {
 }
 
 
-valid_check <- function(param, y, x, va, vb, vc, weights, subset, est.method,
-                       optimal, max.step, thres, alpha.start, beta.start) {
+valid_check <- function(param, y, x, va, vb, vc, weights, subset, est_method,
+                       optimal, max_step, thres, alpha_start, beta_start) {
   if (!is.character(param)) {
     stop("Parameter must be a character")
   }
@@ -103,23 +103,23 @@ valid_check <- function(param, y, x, va, vb, vc, weights, subset, est.method,
   if (!is.numeric(subset)) {
     stop("subset must either be NULL or take numerical values")
   }
-  if (!(est.method %in% c("MLE", "DR"))) {
+  if (!(est_method %in% c("MLE", "DR"))) {
     stop("Must use MLE or DR for estimation")
   }
   if (!is.logical(optimal)) {
     stop("optimal must be a logical variable")
   }
-  if (!is.numeric(max.step) & !is.null(max.step)) {
-    stop("max.step must be a number")
+  if (!is.numeric(max_step) & !is.null(max_step)) {
+    stop("max_step must be a number")
   }
   if (!is.numeric(thres)) {
     stop("thres must be a number")
   }
-  if (!is.null(alpha.start) & length(alpha.start) != dim(va)[2]) {
-    stop("length of alpha.start must match the dimension of va")
+  if (!is.null(alpha_start) & length(alpha_start) != dim(va)[2]) {
+    stop("length of alpha_start must match the dimension of va")
   }
-  if (!is.null(beta.start) & length(beta.start) != dim(vb)[2]) {
-    stop("length of beta.start must match the dimension of vb")
+  if (!is.null(beta_start) & length(beta_start) != dim(vb)[2]) {
+    stop("length of beta_start must match the dimension of vb")
   }
 }
 
