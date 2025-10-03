@@ -1,22 +1,22 @@
 dr_est <- function(
-    param, y, x, va, vb, vc, alpha.ml, beta.ml, gamma, optimal,
-    weights, max.step, thres, alpha.start, beta.cov, gamma.cov, message) {
-  dr.est <- dr_estimate_noiterate(
-    param, y, x, va, vb, vc, alpha.ml, beta.ml,
-    gamma, optimal, weights, max.step, thres, alpha.start, message
+    param, y, x, va, vb, vc, alpha_ml, beta_ml, gamma, optimal,
+    weights, max_step, thres, alpha_start, beta_cov, gamma_cov, message) {
+  dr_est <- dr_estimate_noiterate(
+    param, y, x, va, vb, vc, alpha_ml, beta_ml,
+    gamma, optimal, weights, max_step, thres, alpha_start, message
   )
-  point.est <- dr.est$par
-  converged <- dr.est$convergence
+  point_est <- dr_est$par
+  converged <- dr_est$convergence
 
   if (param == "RR") {
-    alpha.cov <- var_rr_dr(
-      y, x, va, vb, vc, point.est, alpha.ml, beta.ml,
+    alpha_cov <- var_rr_dr(
+      y, x, va, vb, vc, point_est, alpha_ml, beta_ml,
       gamma, optimal, weights
     )
   }
   if (param == "RD") {
-    alpha.cov <- var_rd_dr(
-      y, x, va, vb, vc, point.est, alpha.ml, beta.ml,
+    alpha_cov <- var_rd_dr(
+      y, x, va, vb, vc, point_est, alpha_ml, beta_ml,
       gamma, optimal, weights
     )
   }
@@ -28,12 +28,12 @@ dr_est <- function(
     c(rep("alpha", pa), rep("beta", pb), rep("gamma", pc)),
     c(1:pa, 1:pb, 1:pc)
   )
-  point.est <- c(point.est, beta.ml, gamma)
+  point_est <- c(point_est, beta_ml, gamma)
   cov <- matrix(NA, pa + pb + pc, pa + pb + pc)
-  cov[1:pa, 1:pa] <- alpha.cov
-  cov[(pa + 1):(pa + pb), (pa + 1):(pa + pb)] <- beta.cov
-  cov[(pa + pb + 1):(pa + pb + pc), (pa + pb + 1):(pa + pb + pc)] <- gamma.cov
+  cov[1:pa, 1:pa] <- alpha_cov
+  cov[(pa + 1):(pa + pb), (pa + 1):(pa + pb)] <- beta_cov
+  cov[(pa + pb + 1):(pa + pb + pc), (pa + pb + 1):(pa + pb + pc)] <- gamma_cov
 
-  sol <- wrap_results(point.est, cov, param, name, va, vb, converged)
+  sol <- wrap_results(point_est, cov, param, name, va, vb, converged)
   return(sol)
 }
