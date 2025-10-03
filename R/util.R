@@ -74,7 +74,7 @@ getPrbAux = function(x) {
 
 
 valid_check <- function(param, y, x, va, vb, vc, weights, subset, est_method,
-                       optimal, max_step, thres, alpha_start, beta_start) {
+                        optimal, max_step, thres, alpha_start, beta_start) {
   if (!is.character(param)) {
     stop("Parameter must be a character")
   }

@@ -1,5 +1,5 @@
 mle_point <- function(param, y, x, va, vb, alpha_start, beta_start, weights,
-                           max_step, thres, pa, pb) {
+                      max_step, thres, pa, pb) {
   startpars <- c(alpha_start, beta_start)
 
   getProb <- if (param == "RR") get_prob_rr else get_prob_rd
