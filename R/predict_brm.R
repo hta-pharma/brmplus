@@ -19,7 +19,7 @@
 #' @export
 
 
-predict.brm <- function(object, x.new = NULL, va.new = NULL, vb.new = NULL, ...) {
+predict_brm <- function(object, x.new = NULL, va.new = NULL, vb.new = NULL, ...) {
   va <- object$va
   vb <- object$vb
 
@@ -40,10 +40,10 @@ predict.brm <- function(object, x.new = NULL, va.new = NULL, vb.new = NULL, ...)
 
   linear.predictors <- cbind(va.new %*% alpha.est, vb.new %*% beta.est)
   if (object$param == "RR") {
-    p0p1 <- getProbRR(linear.predictors)
+    p0p1 <- get_prob_rr(linear.predictors)
   }
   if (object$param == "RD") {
-    p0p1 <- getProbRD(linear.predictors)
+    p0p1 <- get_prob_rd(linear.predictors)
   }
   if (object$param == "OR") {
     p0 <- expit(linear.predictors[, 2])

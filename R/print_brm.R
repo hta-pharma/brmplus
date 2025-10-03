@@ -6,7 +6,7 @@
 #'
 #' @export
 
-print.brm <- function(x, ...) {
+print_brm <- function(x, ...) {
   hid <- attr(x, "hidden")
   nhid <- which(!names(x) %in% hid)
 

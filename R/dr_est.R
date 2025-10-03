@@ -1,7 +1,7 @@
-DREst <- function(
+dr_est <- function(
     param, y, x, va, vb, vc, alpha.ml, beta.ml, gamma, optimal,
     weights, max.step, thres, alpha.start, beta.cov, gamma.cov, message) {
-  dr.est <- dr.estimate.noiterate(
+  dr.est <- dr_estimate_noiterate(
     param, y, x, va, vb, vc, alpha.ml, beta.ml,
     gamma, optimal, weights, max.step, thres, alpha.start, message
   )
@@ -9,13 +9,13 @@ DREst <- function(
   converged <- dr.est$convergence
 
   if (param == "RR") {
-    alpha.cov <- var.rr.dr(
+    alpha.cov <- var_rr_dr(
       y, x, va, vb, vc, point.est, alpha.ml, beta.ml,
       gamma, optimal, weights
     )
   }
   if (param == "RD") {
-    alpha.cov <- var.rd.dr(
+    alpha.cov <- var_rd_dr(
       y, x, va, vb, vc, point.est, alpha.ml, beta.ml,
       gamma, optimal, weights
     )
@@ -34,6 +34,6 @@ DREst <- function(
   cov[(pa + 1):(pa + pb), (pa + 1):(pa + pb)] <- beta.cov
   cov[(pa + pb + 1):(pa + pb + pc), (pa + pb + 1):(pa + pb + pc)] <- gamma.cov
 
-  sol <- WrapResults(point.est, cov, param, name, va, vb, converged)
+  sol <- wrap_results(point.est, cov, param, name, va, vb, converged)
   return(sol)
 }

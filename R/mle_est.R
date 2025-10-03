@@ -1,4 +1,4 @@
-MLEst <- function(
+mle_est <- function(
     param, y, x, va, vb, weights, max.step, thres, alpha.start,
     beta.start, pa, pb) {
   ## starting values for parameter optimization
@@ -24,7 +24,7 @@ MLEst <- function(
     converged <- fit$converged
   } else {
     ### point estimate
-    mle <- max.likelihood(
+    mle <- mle_point(
       param, y, x, va, vb, alpha.start, beta.start,
       weights, max.step, thres, pa, pb
     )
@@ -36,15 +36,15 @@ MLEst <- function(
 
     ### Computing Fisher Information:
     if (param == "RR") {
-      cov <- var.mle.rr(x, alpha.ml, beta.ml, va, vb, weights)
+      cov <- mle_var_rr(x, alpha.ml, beta.ml, va, vb, weights)
     }
     if (param == "RD") {
-      cov <- var.mle.rd(x, alpha.ml, beta.ml, va, vb, weights)
+      cov <- mle_var_rd(x, alpha.ml, beta.ml, va, vb, weights)
     }
     sd.est <- sqrt(diag(cov))
   }
 
   name <- paste(c(rep("alpha", pa), rep("beta", pb)), c(1:pa, 1:pb))
-  sol <- WrapResults(point.est, cov, param, name, va, vb, converged)
+  sol <- wrap_results(point.est, cov, param, name, va, vb, converged)
   return(sol)
 }

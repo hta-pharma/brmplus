@@ -8,17 +8,17 @@
 #'
 #' @return a matrix \eqn{(P(y=1|x=0),P(y=1|x=1))} with two columns
 #'
-#' @examples getProbRR(0, 0)
+#' @examples get_prob_rr(0, 0)
 #'
 #' set.seed(0)
 #' logrr <- rnorm(10, 0, 1)
 #' logop <- rnorm(10, 0, 1)
-#' probs <- getProbRR(logrr, logop)
+#' probs <- get_prob_rr(logrr, logop)
 #' colnames(probs) <- c("P(y=1|x=0)", "P(y=1|x=1)")
 #' probs
 #'
 #' @export
-getProbRR <- function(logrr, logop = NA) {
+get_prob_rr <- function(logrr, logop = NA) {
   if (is.matrix(logrr) && ncol(logrr) == 2) {
     logop <- logrr[, 2]
     logrr <- logrr[, 1]
@@ -30,7 +30,7 @@ getProbRR <- function(logrr, logop = NA) {
     ## on the boundary South edge: large -ve logrr or (large -ve logop and -ve
     ## logrr)
     ifelse((logrr < (-12)) | ((logop < (-12)) & (logrr < 0)),
-      getPrbAux(logop - logrr),
+      get_prb_aux(logop - logrr),
       ifelse((logrr > 12) | ((logop < (-12)) & (logrr > 0)),
         ## West edge: large +ve logrr or (large -ve logop and +ve logrr)
         0,
@@ -51,7 +51,7 @@ getProbRR <- function(logrr, logop = NA) {
       0,
       ifelse((logrr > 12) | ((logop < (-12)) & (logrr > 0)),
         ## West edge: large +ve logrr or (large -ve logop and +ve logrr)
-        getPrbAux(logop + logrr),
+        get_prb_aux(logop + logrr),
         pmin(exp(logrr), 1)
       )
     ),

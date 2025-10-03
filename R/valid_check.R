@@ -1,4 +1,4 @@
-ValidCheck <- function(param, y, x, va, vb, vc, weights, subset, est.method,
+valid_check <- function(param, y, x, va, vb, vc, weights, subset, est.method,
                        optimal, max.step, thres, alpha.start, beta.start) {
   if (!is.character(param)) {
     stop("Parameter must be a character")

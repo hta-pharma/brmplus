@@ -1,6 +1,6 @@
 ## Sandwich estimator for variance of RD
 
-var.rd.dr <- function(
+var_rd_dr <- function(
     y, x, va, vb, vc, alpha.dr, alpha.ml, beta.ml, gamma,
     optimal, weights) {
   ########################################
@@ -11,7 +11,7 @@ var.rd.dr <- function(
   ### 1. - E[dS/d(alpha.ml,beta.ml)] ############################## Computing
   ### the Hessian:
 
-  Hrd <- Hessian2RD(y, x, va, vb, alpha.ml, beta.ml, weights)
+  Hrd <- hessian_2_rd(y, x, va, vb, alpha.ml, beta.ml, weights)
   hessian <- Hrd$hessian
   p0 <- Hrd$p0
   p1 <- Hrd$p1

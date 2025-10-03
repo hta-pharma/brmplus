@@ -79,9 +79,9 @@
 #'
 #' Eric J. Tchetgen Tchetgen, James M. Robins and Andrea Rotnitzky. "On doubly robust estimation in a semiparametric odds ratio model." Biometrika 97.1 (2010): 171-180.
 #'
-#' @seealso \code{getProbRD}, and \code{getProbRR} for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
+#' @seealso \code{get_prob_rd}, and \code{get_prob_rr} for functions calculating risks P(y=1|x=1) and P(y=1|x=0) from (atanh RD, log OP) or (log RR, log OP);
 #'
-#' \code{predict.blm} for obtaining fitted probabilities from \code{brm} fits.
+#' \code{predict.brm} for obtaining fitted probabilities from \code{brm} fits.
 #'
 #' @examples
 #' set.seed(0)
@@ -97,7 +97,7 @@
 #' v.2 <- runif(n, -2, 2)
 #' v <- cbind(v.1, v.2)
 #' pscore.true <- exp(v %*% gamma.true) / (1 + exp(v %*% gamma.true))
-#' p0p1.true <- getProbRR(v %*% alpha.true, v %*% beta.true)
+#' p0p1.true <- get_prob_rr(v %*% alpha.true, v %*% beta.true)
 #' x <- rbinom(n, 1, pscore.true)
 #' pA.true <- p0p1.true[, 1]
 #' pA.true[x == 1] <- p0p1.true[x == 1, 2]
@@ -142,7 +142,7 @@ brm <- function(
     subset <- 1:length(y)
   }
 
-  ValidCheck(
+  valid_check(
     param, y, x, va, vb, vc, weights, subset, est.method, optimal,
     max.step, thres, alpha.start, beta.start
   )
@@ -161,7 +161,7 @@ brm <- function(
   if (is.null(max.step)) max.step <- min(pa * 20, 1000)
 
   if (est.method == "MLE") {
-    sol <- MLEst(
+    sol <- mle_est(
       param, y, x, va, vb, weights, max.step, thres, alpha.start,
       beta.start, pa, pb
     )
@@ -172,7 +172,7 @@ brm <- function(
       return()
     }
     if (is.null(alpha.start) | is.null(beta.start)) {
-      sol <- MLEst(
+      sol <- mle_est(
         param, y, x, va, vb, weights, max.step, thres,
         alpha.start, beta.start, pa, pb
       )
@@ -189,7 +189,7 @@ brm <- function(
     gamma.fit <- stats::glm(x ~ vc - 1, weight = weights, family = "binomial")
     gamma <- gamma.fit$coefficients
     gamma.cov <- summary(gamma.fit)$cov.unscaled
-    sol <- DREst(
+    sol <- dr_est(
       param, y, x, va, vb, vc, alpha.ml, beta.ml, gamma, optimal,
       weights, max.step, thres, alpha.start, beta.cov, gamma.cov, message
     )
