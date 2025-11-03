@@ -106,7 +106,7 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
   diff = thres + 1; step = 0
   while(diff > thres & step < max.step){
     step = step + 1
-    opt1 = stats::optim(alpha,neg.log.likelihood.alpha,control=list(maxit=max(100,max.step/10)),method = "Brent",lower = -12,upper = 12)
+    opt1 = stats::optim(alpha,neg.log.likelihood.alpha,control=list(maxit=max(100,max.step/10)))
     diff1 = Diff(opt1$par,alpha)
     alpha = opt1$par
     opt2 = stats::optim(beta,neg.log.likelihood.beta,control=list(maxit=max(100,max.step/10)))
@@ -119,3 +119,5 @@ max.likelihood.jeffrey.direct = function(param, y, x, va, vb, alpha.start, beta.
 
   return(opt)
 }
+
+

@@ -148,8 +148,9 @@ profile <- function(param,y, x, va, vb, weight, max.step, thres, pars, se, pa, p
     alpha.low[j] <- min(alpha.mat[which(lrt.mat[,j] <= chi.th),j])
   }
 
-  p.values <- pchisq(get.lrt(c(0,0)), df = 1, lower.tail = FALSE)
+  p.values <- pchisq(get.lrt(alpha.start), df = 1, lower.tail = FALSE)
   return(list(low = alpha.low,
               up = alpha.up,
               p = p.values))
 }
+
