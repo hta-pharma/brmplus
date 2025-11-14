@@ -1,24 +1,6 @@
-logit <- function(prob) {
-  log(prob) - log(1 - prob)
-}
-
 expit <- function(logodds) {
   1 / (1 + exp(-logodds))
 }
-
-
-getlogop <- function(p0, p1) {
-  log(p0) + log(p1) - log(1 - p0) - log(1 - p1)
-}
-
-getlogrr <- function(p0, p1) {
-  log(p1) - log(p0)
-}
-
-getatanhrd <- function(p0, p1) {
-  atanh(p1 - p0)
-}
-
 
 ## Function for checking if two things are equal within numerical precision
 same <- function(x, y, tolerance = .Machine$double.eps^0.5) {
