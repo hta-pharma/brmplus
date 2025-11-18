@@ -1,4 +1,3 @@
-
 test_that("get_prob_rr", {
   expect_true(exists("get_prob_rr")) # prevent "empty test" notification
 
