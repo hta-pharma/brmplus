@@ -113,9 +113,10 @@
 
 
 brm <- function(
-    y, x, va, vb = NULL, param, est_method = "MLE", vc = NULL,
-    optimal = TRUE, weights = NULL, subset = NULL, max_step = NULL, thres = 1e-8,
-    alpha_start = NULL, beta_start = NULL, message = FALSE) {
+  y, x, va, vb = NULL, param, est_method = "MLE", vc = NULL,
+  optimal = TRUE, weights = NULL, subset = NULL, max_step = NULL, thres = 1e-8,
+  alpha_start = NULL, beta_start = NULL, message = FALSE
+) {
   # default param = 'RR'; est_method = 'MLE'; va = v; vb = v; vc = v;
   # weights = NULL; subset = NULL; optimal = TRUE; max_step = NULL;
   # thres = 1e-06; alpha_start = NULL; beta_start = NULL

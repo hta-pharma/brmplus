@@ -1,6 +1,7 @@
 dr_est <- function(
-    param, y, x, va, vb, vc, alpha_ml, beta_ml, gamma, optimal,
-    weights, max_step, thres, alpha_start, beta_cov, gamma_cov, message) {
+  param, y, x, va, vb, vc, alpha_ml, beta_ml, gamma, optimal,
+  weights, max_step, thres, alpha_start, beta_cov, gamma_cov, message
+) {
   dr_est <- dr_estimate_noiterate(
     param, y, x, va, vb, vc, alpha_ml, beta_ml,
     gamma, optimal, weights, max_step, thres, alpha_start, message

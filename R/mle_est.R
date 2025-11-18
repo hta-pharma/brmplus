@@ -1,6 +1,7 @@
 mle_est <- function(
-    param, y, x, va, vb, weights, max_step, thres, alpha_start,
-    beta_start, pa, pb) {
+  param, y, x, va, vb, weights, max_step, thres, alpha_start,
+  beta_start, pa, pb
+) {
   ## starting values for parameter optimization
   if (is.null(alpha_start)) {
     alpha_start <- rep(0, pa)
