@@ -1,6 +1,7 @@
 dr_estimate_onestep <- function(
-    param, y, x, va, vb, alpha_start, beta, pscore,
-    wt, weights, max_step, thres, message) {
+  param, y, x, va, vb, alpha_start, beta, pscore,
+  wt, weights, max_step, thres, message
+) {
   startpars <- c(alpha_start) # pars only contain alpha
   ## DR estimation equation^2
   if (param == "RR") {
@@ -27,10 +28,10 @@ dr_estimate_onestep <- function(
 }
 
 
-
 dr_estimate_noiterate <- function(
-    param, y, x, va, vb, vc, alpha_ml, beta_ml,
-    gamma, optimal, weights, max_step, thres, alpha_start, message) {
+  param, y, x, va, vb, vc, alpha_ml, beta_ml,
+  gamma, optimal, weights, max_step, thres, alpha_start, message
+) {
   pscore <- as.vector(expit(mat_vec_mul(vc, gamma)))
 
   if (optimal == TRUE) {

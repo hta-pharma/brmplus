@@ -18,8 +18,6 @@ mle_var_rr <- function(x, alpha_ml, beta_ml, va, vb, weights) {
 }
 
 
-
-
 ### variance calculation
 
 mle_var_rd <- function(x, alpha_ml, beta_ml, va, vb, weights) {

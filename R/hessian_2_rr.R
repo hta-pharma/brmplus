@@ -24,7 +24,6 @@ hessian_2_rr <- function(y, x, va, vb, alpha_ml, beta_ml, weights) {
   d2l_by_dpsi0_2 <- (y - 1) * pA / ((1 - pA)^2)
 
 
-
   ###### d2l_by_dalpha_2
 
   d2psi0_by_dtheta_2 <- ((p0 - p1) * dpsi0_by_dtheta - (1 - p0) * p1) / ((1 -
@@ -59,7 +58,6 @@ hessian_2_rr <- function(y, x, va, vb, alpha_ml, beta_ml, weights) {
   d2l_by_dphi_2 <- d2l_by_dpsi0_2 * (dpsi0_by_dphi)^2 + dl_by_dpsi0 * d2psi0_by_dphi_2
 
   d2l_by_dbeta_2 <- t(dphi_by_dbeta * d2l_by_dphi_2 * weights) %*% dphi_by_dbeta
-
 
 
   hessian <- -rbind(cbind(d2l_by_dalpha_2, d2l_by_dalpha_dbeta), cbind(

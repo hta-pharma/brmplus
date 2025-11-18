@@ -1,8 +1,9 @@
 ## Sandwich estimator for variance of RD
 
 var_rd_dr <- function(
-    y, x, va, vb, vc, alpha_dr, alpha_ml, beta_ml, gamma,
-    optimal, weights) {
+  y, x, va, vb, vc, alpha_dr, alpha_ml, beta_ml, gamma,
+  optimal, weights
+) {
   ########################################
 
   pscore <- as.vector(expit(vc %*% gamma))
@@ -101,7 +102,6 @@ var_rd_dr <- function(
     weights) %*% dwt_by_dgamma # 2 by 2
 
 
-
   ############################################################################# Assembling semi-parametric variance matrix
 
   U <- va * wt * (x - pscore) * (H_alpha - p0) # n by 2
@@ -113,7 +113,6 @@ var_rd_dr <- function(
   Utilde <- U - t(dU_by_dalpha_ml_beta_ml %*% (-solve(hessian)) %*% t(S)) -
     t(dU_by_dgamma %*% (solve(part4)) %*% t(pscore_score)) # n by 2
   USigma <- t(Utilde * weights) %*% Utilde / sum(weights)
-
 
 
   ################################### Asymptotic var matrix for alpha_dr
