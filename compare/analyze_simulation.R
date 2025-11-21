@@ -30,7 +30,7 @@ est.result <- function(df,para.true){
 }
 
 plot_metric <- function(df, metric, title, value, ymax = 1, file = NULL) {
-  # 截断值
+  # 
   df <- df %>%
     mutate(y_plot = pmin(!!sym(metric), ymax))   
   
@@ -329,3 +329,4 @@ p_acc <- plot_metric(df, "acc",      paste0("Barplot of accuarcy at n = ",n), 1,
                      paste0("accuracy ", param," ", event," ",hypothesis, " n = ",n, ".png"))
 p_cov <- plot_metric(df, "coverage", paste0("Barplot of coverage at n = ",n), 0.95,1.1,
                      paste0("coverage ", param," ", event," ",hypothesis, " n = ",n, ".png"))
+
