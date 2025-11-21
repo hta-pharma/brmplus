@@ -1,4 +1,4 @@
-setwd("D:/UofT/code/RRRDOR/github/original")
+
 
 library(doParallel)
 library(foreach)
@@ -63,6 +63,7 @@ Sys.time()
 result.all <- do.call(rbind, lapply(result.mle, as.data.frame))
 
 write.csv(result.all, file = paste0("simulation_results_",param,"_",event,"_",hypothesis,"_n_", n, "_R_", R,".csv"))
+
 
 
 
