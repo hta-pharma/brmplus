@@ -252,7 +252,7 @@ p1 = ggplot(est_long_small, aes(x = method, y = estimate, fill = method)) +
   ggsci::scale_fill_d3(palette = "category20") +
   theme_minimal(base_size = 14) +
   geom_hline(yintercept = alpha.true, linetype = "dashed", color = "steelblue") + 
-  stat_summary(fun = mean, geom = "point", shape = 21, size = 1.5, fill = "white", color = "black") +  # <- 添加均值点
+  stat_summary(fun = mean, geom = "point", shape = 21, size = 1.5, fill = "white", color = "black") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none") +
   labs(title = paste0("Monte Carlo when n = ", n),
@@ -329,4 +329,5 @@ p_acc <- plot_metric(df, "acc",      paste0("Barplot of accuarcy at n = ",n), 1,
                      paste0("accuracy ", param," ", event," ",hypothesis, " n = ",n, ".png"))
 p_cov <- plot_metric(df, "coverage", paste0("Barplot of coverage at n = ",n), 0.95,1.1,
                      paste0("coverage ", param," ", event," ",hypothesis, " n = ",n, ".png"))
+
 
