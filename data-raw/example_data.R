@@ -1,10 +1,8 @@
 
-source("../compare/data_generation_simulation.R")
 source("../compare/getProbScalarRR.R")
 source("../compare/getProbScalarRD.R")
 source("../compare/MyFunc.R")
 
-### The true parameters
 get.truth.params <- function(param,
                              event = c("common", "rare"),
                              hypothesis = c("null", "alternative")) {
@@ -64,28 +62,57 @@ get.truth.params <- function(param,
        gamma.true = gamma.true)
 }
 
-#' Generate example datasets for all RR/RD scenarios
-#'
-#' @param n Integer. Sample size per scenario (i.e., per combination of
-#'   param × event × hypothesis).
-#' @param seed Integer or NULL. If not NULL, used to set.seed() for reproducibility.
-#'
-#' @return A list with two elements:
-#'   \item{ipd}{data.frame of individual-level data for all scenarios, with columns
-#'              y, x, v.1, v.2, param, event, hypothesis.}
-#'   \item{counts}{data.frame of 2×2 table counts and labels for each scenario,
-#'                 with columns param, event, hypothesis, Na0, Na1, N0_1, N1_1.}
 
-generate.example.data <- function(n = 50, seed = 1234) {
+data.generate <- function(param, distribution = "unif", n, alpha.true, beta.true, gamma.true){
+  
+  getProb = if (param == "RR") getProbRR else getProbRD
+  
+  v.1         = rep(1,n)       # intercept term
+  if(distribution == 'unif'){
+    v.2       = runif(n,0,0.6) 
+  } else if(distribution == 'binom'){
+    v.2         = rbinom(n,1,0.3)
+  } else if(distribution == 'norm'){
+    v.2         = rnorm(n,0.5,0.3)
+  }
+  v           = cbind(v.1,v.2)
+  v.1 = as.matrix(v.1, ncol = 1)
+  pscore.true = exp(v %*% gamma.true) / (1+exp(v %*% gamma.true))
+  p0p1.true   = getProb(v.1 %*% alpha.true,v %*% beta.true)
+  x           = rbinom(n, 1, pscore.true) 
+  pA.true       = p0p1.true[,1]
+  pA.true[x==1] = p0p1.true[x==1,2]
+  y = rbinom(n, 1, pA.true)
+  
+  Na0 <- sum(x==0)
+  Na1 <- sum(x==1)
+  N0_1 <- sum(y[which(x==0)])
+  N1_1 <- sum(y[which(x==1)])
+  
+  data.simulation <- list(data = data.frame(y,x,v), count = c(Na0,Na1,N0_1,N1_1))
+  return(data.simulation)
+}
+
+
+
+generate.example.data <- function(
+    n            = 50,
+    seed         = 1234,
+    distributions = c("unif", "binom", "norm")  
+) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
   
-  # All：param × event × hypothesis
+  # 
+  distributions <- match.arg(distributions, choices = c("unif", "binom", "norm"), several.ok = TRUE)
+  
+  # param × event × hypothesis × distribution
   cases <- expand.grid(
-    param      = c("RR", "RD"),
-    event      = c("common", "rare"),
-    hypothesis = c("null", "alternative"),
+    param        = c("RR", "RD"),
+    event        = c("common", "rare"),
+    hypothesis   = c("null", "alternative"),
+    distribution = distributions,
     stringsAsFactors = FALSE
   )
   
@@ -93,16 +120,20 @@ generate.example.data <- function(n = 50, seed = 1234) {
   counts_list <- vector("list", nrow(cases))
   
   for (i in seq_len(nrow(cases))) {
-    param_i      <- cases$param[i]
-    event_i      <- cases$event[i]
-    hypothesis_i <- cases$hypothesis[i]
+    param_i        <- cases$param[i]
+    event_i        <- cases$event[i]
+    hypothesis_i   <- cases$hypothesis[i]
+    distribution_i <- cases$distribution[i]
     
-    truth <- get.truth.params(param = param_i,
-                              event = event_i,
-                              hypothesis = hypothesis_i)
+    truth <- get.truth.params(
+      param      = param_i,
+      event      = event_i,
+      hypothesis = hypothesis_i
+    )
     
-    sim_i <- data.generation(
+    sim_i <- data.generate(
       param       = param_i,
+      distribution = distribution_i, 
       n           = n,
       alpha.true  = truth$alpha.true,
       beta.true   = truth$beta.true,
@@ -110,17 +141,19 @@ generate.example.data <- function(n = 50, seed = 1234) {
     )
     
     dat_i <- sim_i$data
-    # add label
-    dat_i$param      <- param_i
-    dat_i$event      <- event_i
-    dat_i$hypothesis <- hypothesis_i
+    # 加标签
+    dat_i$param        <- param_i
+    dat_i$event        <- event_i
+    dat_i$hypothesis   <- hypothesis_i
+    dat_i$distribution <- distribution_i
     
     ipd_list[[i]] <- dat_i
     
     counts_list[[i]] <- data.frame(
-      param      = param_i,
-      event      = event_i,
-      hypothesis = hypothesis_i,
+      param        = param_i,
+      event        = event_i,
+      hypothesis   = hypothesis_i,
+      distribution = distribution_i,
       Na0  = sim_i$count[1],
       Na1  = sim_i$count[2],
       N0_1 = sim_i$count[3],
@@ -139,6 +172,7 @@ generate.example.data <- function(n = 50, seed = 1234) {
     counts = counts_all
   )
 }
+
 
 ## n = 50
 exdat.50 <- generate.example.data(n = 50, seed = 1234)
