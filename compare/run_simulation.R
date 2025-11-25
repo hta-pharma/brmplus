@@ -1,20 +1,21 @@
-setwd("D:/UofT/code/RRRDOR/github/original")
+
 
 library(doParallel)
 library(foreach)
 library(doRNG)
 
+source("getProbScalarRR.R")
 source("getProbScalarRD.R")
+source("1_CallMLE.R")
 source("1.1_MLE_Point.R")
 source("MLE_Point_Firth_for_RR.R")
 source("MLE_Point_Firth_for_RD.R")
 source("1.2_MLE_Var.R")
 source("bayes_p.R")
+source("MyFunc.R")
 source("CI_exact.R")
 source("CI_LRT.R")
 source("data_generation_simulation.R")
-source("MyFunc.R")
-source("1_CallMLE_simulation.R")
 source("../R/RcppExports.R")
 
 library(brm)
@@ -63,6 +64,7 @@ Sys.time()
 result.all <- do.call(rbind, lapply(result.mle, as.data.frame))
 
 write.csv(result.all, file = paste0("simulation_results_",param,"_",event,"_",hypothesis,"_n_", n, "_R_", R,".csv"))
+
 
 
 

@@ -46,7 +46,7 @@ profile <- function(param,y, x, va, vb, weight, max.step, thres, pars, se, pa, p
   alpha.ml = pars[1:pa]
   beta.ml = pars[(pa + 1):(pa + pb)]
   p0p1 = getProb(va %*% alpha.ml, vb %*% beta.ml)
-  p0.ml = p0p1[, 1  ];   p1.ml = p0p1[, 2]
+  p0.ml = p0p1[, 1];   p1.ml = p0p1[, 2]
   ## profile
 
   alpha.start <- rep(0,pa)
@@ -153,4 +153,5 @@ profile <- function(param,y, x, va, vb, weight, max.step, thres, pars, se, pa, p
               up = alpha.up,
               p = p.values))
 }
+
 

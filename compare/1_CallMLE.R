@@ -85,3 +85,4 @@ MLEst = function(param, y, x, va, vb, weight, max.step, thres, alpha.start,
     sol = WrapResults(point.est, cov, param, name, va, vb, converged, ci.est)
     return(sol)
 }
+
