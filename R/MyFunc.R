@@ -33,6 +33,7 @@ WrapResults = function(point.est, cov, param, name, va, vb, converged) {
 
     conf.lower = point.est + stats::qnorm(0.025) * se.est
     conf.upper = point.est + stats::qnorm(0.975) * se.est
+    p.temp = stats::pnorm(point.est/se.est, 0, 1)
     p.value = 2 * pmin(p.temp, 1 - p.temp)
 
     names(point.est) = names(se.est) = rownames(cov) = colnames(cov) = names(conf.lower) = names(conf.upper) = names(p.value) = name
