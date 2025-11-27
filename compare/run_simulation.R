@@ -1,5 +1,3 @@
-
-
 library(doParallel)
 library(foreach)
 library(doRNG)
@@ -31,11 +29,11 @@ library(PropCIs)
 library(MASS)
 
 ### Modifiable parameters
-param = 'RD'           # or 'RR'
-n = 50                 # or 200, 500
-event = 'rare'         # or 'common'
-hypothesis = 'null'    # or 'alternative'
-R = 10                 # change with Monte Carlo
+param <- "RD" # or 'RR'
+n <- 50 # or 200, 500
+event <- "rare" # or 'common'
+hypothesis <- "null" # or 'alternative'
+R <- 10 # change with Monte Carlo
 ncores <- 5
 
 
@@ -43,28 +41,29 @@ ncores <- 5
 cl <- makeCluster(ncores)
 registerDoParallel(cl)
 
-result.mle <- foreach(r = (R-9):R,
-                      .packages = c("brm","epitools","geepack","sandwich","lmtest","brglm2",
-                                    "MASS","logistf","binom","epiR","PropCIs"),
-                      .options.RNG=1234) %dorng% {
+result.mle <- foreach(
+  r = (R - 9):R,
+  .packages = c(
+    "brm", "epitools", "geepack", "sandwich", "lmtest", "brglm2",
+    "MASS", "logistf", "binom", "epiR", "PropCIs"
+  ),
+  .options.RNG = 1234
+) %dorng% {
+  set.seed(r)
 
-                        set.seed(r)
+  r1 <- run(param, n, event, hypothesis)
 
-                        r1 <- run(param,n,event,hypothesis)
-
-                        list(estimate = r1[1,],
-                             se = r1[2,],
-                             low = r1[3,],
-                             up = r1[4,],
-                             p = r1[5,])
-                         }
+  list(
+    estimate = r1[1, ],
+    se = r1[2, ],
+    low = r1[3, ],
+    up = r1[4, ],
+    p = r1[5, ]
+  )
+}
 
 stopCluster(cl)
 Sys.time()
 result.all <- do.call(rbind, lapply(result.mle, as.data.frame))
 
-write.csv(result.all, file = paste0("simulation_results_",param,"_",event,"_",hypothesis,"_n_", n, "_R_", R,".csv"))
-
-
-
-
+write.csv(result.all, file = paste0("simulation_results_", param, "_", event, "_", hypothesis, "_n_", n, "_R_", R, ".csv"))

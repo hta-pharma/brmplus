@@ -48,7 +48,7 @@ wrap_results <- function(point_est, cov, param, name, va, vb, converged) {
 ## Limits are 0 and 1 as x goes to -infty and +infty respectively
 ## The function will never return NaN given a numerical input
 
-getPrbAux = function(x) {
+get_prb_aux = function(x) {
     ifelse((x < 17) & (x > (-500)),
            0.5 * exp(x) * (-1 + (1 + 4 * exp(-x))^0.5),
            ifelse(x<0, 0, 1))
