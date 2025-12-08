@@ -40,118 +40,127 @@
 #' }
 #'
 
-profile <- function(param,y, x, va, vb, weight, max.step, thres, pars, se, pa, pb){
+profile <- function(param, y, x, va, vb, weight, max.step, thres, pars, se, pa, pb) {
   ## real data
-  getProb = if (param == "RR") getProbRR else getProbRD
-  alpha.ml = pars[1:pa]
-  beta.ml = pars[(pa + 1):(pa + pb)]
-  p0p1 = getProb(va %*% alpha.ml, vb %*% beta.ml)
-  p0.ml = p0p1[, 1];   p1.ml = p0p1[, 2]
+  getProb <- if (param == "RR") getProbRR else getProbRD
+  alpha.ml <- pars[1:pa]
+  beta.ml <- pars[(pa + 1):(pa + pb)]
+  p0p1 <- getProb(va %*% alpha.ml, vb %*% beta.ml)
+  p0.ml <- p0p1[, 1]
+  p1.ml <- p0p1[, 2]
   ## profile
 
-  alpha.start <- rep(0,pa)
-  beta.start <- rep(0,pb)
+  alpha.start <- rep(0, pa)
+  beta.start <- rep(0, pb)
 
-  optm.beta <- function(alphaj,j){
-
-    neg.log.likelihood = function(pars) {
-      alpha = pars[1:pa]
-      beta = pars[(pa + 1):(pa + pb)]
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
-      p0 = p0p1[, 1];   p1 = p0p1[, 2]
+  optm.beta <- function(alphaj, j) {
+    neg.log.likelihood <- function(pars) {
+      alpha <- pars[1:pa]
+      beta <- pars[(pa + 1):(pa + pb)]
+      p0p1 <- getProb(va %*% alpha, vb %*% beta)
+      p0 <- p0p1[, 1]
+      p1 <- p0p1[, 2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
       p1 <- pmin(pmax(p1, eps), 1 - eps)
 
       return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] +
-                    (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x ==
-                                                                                    1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x ==
-                                                                                                                                                         1]) * weight[x == 1]))
+        (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) - sum((1 - y[x ==
+        1]) * log(1 - p1[x == 1]) * weight[x == 1] + (y[x == 1]) * log(p1[x ==
+        1]) * weight[x == 1]))
     }
 
-    neg.log.likelihood.alpha = function(alpha){
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
-      p0    = p0p1[,1];  p1 = p0p1[,2]
+    neg.log.likelihood.alpha <- function(alpha) {
+      p0p1 <- getProb(va %*% alpha, vb %*% beta)
+      p0 <- p0p1[, 1]
+      p1 <- p0p1[, 2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
       p1 <- pmin(pmax(p1, eps), 1 - eps)
 
-      return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
-                    (y[x==0])*log(p0[x==0])*weight[x==0]) -
-               sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
-                     (y[x==1])*log(p1[x==1])*weight[x==1]))
+      return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] +
+        (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) -
+        sum((1 - y[x == 1]) * log(1 - p1[x == 1]) * weight[x == 1] +
+          (y[x == 1]) * log(p1[x == 1]) * weight[x == 1]))
     }
 
-    neg.log.likelihood.beta = function(beta){
-      p0p1 = getProb(va %*% alpha, vb %*% beta)
-      p0    = p0p1[,1];  p1 = p0p1[,2]
+    neg.log.likelihood.beta <- function(beta) {
+      p0p1 <- getProb(va %*% alpha, vb %*% beta)
+      p0 <- p0p1[, 1]
+      p1 <- p0p1[, 2]
       eps <- 1e-12
       p0 <- pmin(pmax(p0, eps), 1 - eps)
       p1 <- pmin(pmax(p1, eps), 1 - eps)
 
 
-      return(-sum((1-y[x==0])*log(1-p0[x==0])*weight[x==0] +
-                    (y[x==0])*log(p0[x==0])*weight[x==0]) -
-               sum((1-y[x==1])*log(1-p1[x==1])*weight[x==1] +
-                     (y[x==1])*log(p1[x==1])*weight[x==1]))
+      return(-sum((1 - y[x == 0]) * log(1 - p0[x == 0]) * weight[x == 0] +
+        (y[x == 0]) * log(p0[x == 0]) * weight[x == 0]) -
+        sum((1 - y[x == 1]) * log(1 - p1[x == 1]) * weight[x == 1] +
+          (y[x == 1]) * log(p1[x == 1]) * weight[x == 1]))
     }
 
-    Diff = function(x,y) sum((x-y)^2)/sum(x^2+thres)
-    alpha = alpha.start
-    alpha[j] = alphaj
-    beta = beta.start
-    diff = thres + 1; step = 0
-    while(diff > thres & step < max.step){
-      step = step + 1
-      opt1 = stats::optim(alpha,neg.log.likelihood.alpha,control=list(maxit=max(100,max.step/10)))
-      diff1 = Diff(opt1$par,alpha)
-      alpha = opt1$par
-      alpha[j] = alphaj
-      opt2 = stats::optim(beta,neg.log.likelihood.beta,control=list(maxit=max(100,max.step/10)))
-      diff  = max(diff1,Diff(opt2$par,beta))
-      beta = opt2$par
+    Diff <- function(x, y) sum((x - y)^2) / sum(x^2 + thres)
+    alpha <- alpha.start
+    alpha[j] <- alphaj
+    beta <- beta.start
+    diff <- thres + 1
+    step <- 0
+    while (diff > thres & step < max.step) {
+      step <- step + 1
+      opt1 <- stats::optim(alpha, neg.log.likelihood.alpha, control = list(maxit = max(100, max.step / 10)))
+      diff1 <- Diff(opt1$par, alpha)
+      alpha <- opt1$par
+      alpha[j] <- alphaj
+      opt2 <- stats::optim(beta, neg.log.likelihood.beta, control = list(maxit = max(100, max.step / 10)))
+      diff <- max(diff1, Diff(opt2$par, beta))
+      beta <- opt2$par
     }
-    return(neg.log.likelihood(c(alpha,beta)))
+    return(neg.log.likelihood(c(alpha, beta)))
   }
 
-  LRT.alpha <- function(alpha,j){
-    return(2*optm.beta(alpha.ml[j],j)-2*optm.beta(alpha[j],j))
+  LRT.alpha <- function(alpha, j) {
+    return(2 * optm.beta(alpha.ml[j], j) - 2 * optm.beta(alpha[j], j))
   }
 
-  get.lrt <- function(alpha){
-    lrt <- rep(0,length(alpha))
+  get.lrt <- function(alpha) {
+    lrt <- rep(0, length(alpha))
     for (j in 1:length(alpha)) {
-      lrt[j] <- LRT.alpha(alpha,j)
+      lrt[j] <- LRT.alpha(alpha, j)
     }
     return(lrt)
   }
 
   chi.th <- qchisq(0.95, df = 1)
 
-  alpha.seq <- lapply(1:pa, function(j){
-    seq(max(alpha.ml[j] - 3*se[j], -12),
-        min(alpha.ml[j] + 3*se[j],  12),
-        length.out = 40)
+  alpha.seq <- lapply(1:pa, function(j) {
+    seq(max(alpha.ml[j] - 3 * se[j], -12),
+      min(alpha.ml[j] + 3 * se[j], 12),
+      length.out = 40
+    )
   })
   alpha.mat <- do.call(cbind, alpha.seq)
 
   result.lrt <- apply(alpha.mat, 1, get.lrt)
 
-  lrt.mat <- if(pa>1) {t(result.lrt)} else{as.matrix(result.lrt,ncol = 1)}
-
-  alpha.up = rep(0,pa)
-  for (j in 1:pa) {
-    alpha.up[j] <- max(alpha.mat[which(lrt.mat[,j] <= chi.th),j])
+  lrt.mat <- if (pa > 1) {
+    t(result.lrt)
+  } else {
+    as.matrix(result.lrt, ncol = 1)
   }
-  alpha.low = rep(0,pa)
+
+  alpha.up <- rep(0, pa)
   for (j in 1:pa) {
-    alpha.low[j] <- min(alpha.mat[which(lrt.mat[,j] <= chi.th),j])
+    alpha.up[j] <- max(alpha.mat[which(lrt.mat[, j] <= chi.th), j])
+  }
+  alpha.low <- rep(0, pa)
+  for (j in 1:pa) {
+    alpha.low[j] <- min(alpha.mat[which(lrt.mat[, j] <= chi.th), j])
   }
 
   p.values <- pchisq(get.lrt(alpha.start), df = 1, lower.tail = FALSE)
-  return(list(low = alpha.low,
-              up = alpha.up,
-              p = p.values))
+  return(list(
+    low = alpha.low,
+    up = alpha.up,
+    p = p.values
+  ))
 }
-
-

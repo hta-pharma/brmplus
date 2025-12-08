@@ -1,0 +1,67 @@
+dr_estimate_onestep <- function(
+  param, y, x, va, vb, alpha_start, beta, pscore,
+  wt, weights, max_step, thres, message
+) {
+  startpars <- c(alpha_start) # pars only contain alpha
+  ## DR estimation equation^2
+  if (param == "RR") {
+    dr_objective <- function(pars) {
+      p0 <- get_prob_rr(mat_vec_mul(va, startpars), mat_vec_mul(vb, beta))[, 1]
+      H_alpha <- as.vector(y * exp(-x * (va %*% pars)))
+      tmp <- mat_vec_mul(t(va), (wt * (x - pscore) * (H_alpha - p0) * weights))
+      return(sum(tmp^2))
+    }
+  }
+  if (param == "RD") {
+    dr_objective <- function(pars) {
+      p0 <- get_prob_rd(mat_vec_mul(va, startpars), mat_vec_mul(vb, beta))[, 1]
+      H_alpha <- y - x * tanh(mat_vec_mul(va, pars))
+      tmp <- mat_vec_mul(t((H_alpha - p0) * (x - pscore)), (va * wt * weights))
+      return(sum(tmp^2))
+    }
+  }
+
+  opt <- stats::optim(startpars, dr_objective, control = list(reltol = thres))
+  opt$convergence <- (opt$convergence == 0) # change cf. optim()
+
+  return(opt)
+}
+
+
+dr_estimate_noiterate <- function(
+  param, y, x, va, vb, vc, alpha_ml, beta_ml,
+  gamma, optimal, weights, max_step, thres, alpha_start, message
+) {
+  pscore <- as.vector(expit(mat_vec_mul(vc, gamma)))
+
+  if (optimal == TRUE) {
+    if (param == "RR") {
+      p0 <- get_prob_rr(mat_vec_mul(va, alpha_ml), mat_vec_mul(vb, beta_ml))[, 1]
+      wt <- as.vector(1 / (1 - p0 + (1 - pscore) * (exp(mat_vec_mul(-va, alpha_ml)) -
+        1)))
+    }
+    if (param == "RD") {
+      p0 <- get_prob_rd(mat_vec_mul(va, alpha_ml), mat_vec_mul(vb, beta_ml))[, 1]
+      rho <- as.vector(tanh(mat_vec_mul(va, alpha_ml)))
+      wt <- (1 - rho) * (1 + rho) / (p0 * (1 - p0) + rho * (1 - pscore) *
+        (1 - 2 * p0 - rho))
+    }
+  } else {
+    wt <- rep(1, length(pscore))
+  }
+
+  if (is.null(alpha_start)) {
+    alpha_start <- alpha_ml
+  }
+
+  alpha_dr_opt <- dr_estimate_onestep(
+    param, y, x, va, vb, alpha_start, beta_ml,
+    pscore, wt, weights, max_step, thres, message
+  )
+
+  # if(MESSAGE){ print(paste('DR One Step: ',' Alpha:
+  # ',paste(round(alpha_dr,5),collapse=', '),' Beta:
+  # ',paste(round(beta_ml,5),collapse=', '))) }
+
+  return(alpha_dr_opt)
+}

@@ -5,13 +5,12 @@
 #' @useDynLib brm
 #' @exportPattern ˆ[[:alpha:]]+
 compute_augmentation_cpp <- function(va, vb, fisher, k_rs, k_stu, k_s_tu) {
-    .Call('_brm_compute_augmentation_cpp', PACKAGE = 'brm', va, vb, fisher, k_rs, k_stu, k_s_tu)
+  .Call("_brm_compute_augmentation_cpp", PACKAGE = "brm", va, vb, fisher, k_rs, k_stu, k_s_tu)
 }
 
 #' @importFrom Rcpp evalCpp
 #' @useDynLib brm
 #' @exportPattern ˆ[[:alpha:]]+
 mat_vec_mul <- function(m, v) {
-    .Call('_brm_mat_vec_mul', PACKAGE = 'brm', m, v)
+  .Call("_brm_mat_vec_mul", PACKAGE = "brm", m, v)
 }
-

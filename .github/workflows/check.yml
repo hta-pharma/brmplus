@@ -1,0 +1,49 @@
+---
+name: Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - master
+      - development
+  push:
+    branches:
+      - master
+      - development
+
+  workflow_dispatch:
+
+jobs:
+  style:
+    if: github.event_name == 'pull_request'
+    name: Style Check
+    uses: insightsengineering/r.pkg.template/.github/workflows/style.yaml@main
+    secrets:
+      REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      auto-update: false
+
+  unit-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/insightsengineering/rstudio
+    steps:
+        -
+          name: Checkout repo
+          uses: actions/checkout@v4.1.1
+        -
+          name: Build
+          run: |
+            Rscript -e "devtools::install()"
+        -
+          name: Test
+          run: |
+            Rscript -e "testthat::test_local()"
+
+
+
