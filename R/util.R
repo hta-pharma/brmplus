@@ -3,8 +3,8 @@ expit <- function(logodds) {
 }
 
 ## Function for checking if two things are equal within numerical precision
-same = function(x, y, tolerance = .Machine$double.eps^0.5) {
-    abs(x - y) < tolerance
+same <- function(x, y, tolerance = .Machine$double.eps^0.5) {
+  abs(x - y) < tolerance
 }
 
 
@@ -48,10 +48,11 @@ wrap_results <- function(point_est, cov, param, name, va, vb, converged) {
 ## Limits are 0 and 1 as x goes to -infty and +infty respectively
 ## The function will never return NaN given a numerical input
 
-get_prb_aux = function(x) {
-    ifelse((x < 17) & (x > (-500)),
-           0.5 * exp(x) * (-1 + (1 + 4 * exp(-x))^0.5),
-           ifelse(x<0, 0, 1))
+get_prb_aux <- function(x) {
+  ifelse((x < 17) & (x > (-500)),
+    0.5 * exp(x) * (-1 + (1 + 4 * exp(-x))^0.5),
+    ifelse(x < 0, 0, 1)
+  )
 }
 
 
