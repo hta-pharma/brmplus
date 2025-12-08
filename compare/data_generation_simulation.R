@@ -220,8 +220,8 @@ simulate.rr <- function(n, event, hypothesis) {
   li.hat <- l.mu(Y1, V.FC.treat, beta.hat.treat, Y0, V.FC.control, beta.hat.control)
   li.hat.star <- l.mu(Y1, V.FC.treat, beta.hat.star.treat, Y0, V.FC.control, beta.hat.star.control)
 
-  se.hat <- sqrt(var.est(li.hat, p.hat.control, p.hat.treat))
-  se.hat.star <- sqrt(var.est(li.hat.star, p.hat.star.control, p.hat.star.treat))
+  se.hat <- sqrt(var.est.RR(li.hat, p.hat.control, p.hat.treat))
+  se.hat.star <- sqrt(var.est.RR(li.hat.star, p.hat.star.control, p.hat.star.treat))
 
   # beta_tilde
   fit.treat <- logistf(Y1 ~ V2.1, data = data.treat)
@@ -258,9 +258,10 @@ simulate.rr <- function(n, event, hypothesis) {
   li.tilde.star <- l.mu(Y1, V.FC.treat, beta.tilde.star.treat, Y0, V.FC.control, beta.tilde.star.control)
   li.tilde.doustar <- l.mu(Y1, V.FC.treat, beta.tilde.doustar.treat, Y0, V.FC.control, beta.tilde.doustar.control)
 
-  se.tilde <- sqrt(var.est(li.tilde, p.tilde.control, p.tilde.treat))
-  se.tilde.star <- sqrt(var.est(li.tilde.star, p.tilde.star.control, p.tilde.star.treat))
-  se.tilde.doustar <- sqrt(var.est(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
+  se.tilde <- sqrt(var.est.RR(li.tilde, p.tilde.control, p.tilde.treat))
+  se.tilde.star <- sqrt(var.est.RR(li.tilde.star, p.tilde.star.control, p.tilde.star.treat))
+  se.tilde.doustar <- sqrt(var.est.RR(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
+
 
 
   ## brm+exact
@@ -531,12 +532,12 @@ simulate.rd <- function(n, event, hypothesis) {
   li.tilde.star <- l.mu(Y1, V.FC.treat, beta.tilde.star.treat, Y0, V.FC.control, beta.tilde.star.control)
   li.tilde.doustar <- l.mu(Y1, V.FC.treat, beta.tilde.doustar.treat, Y0, V.FC.control, beta.tilde.doustar.control)
 
-  se.hat <- sqrt(var.est(li.hat, p.hat.control, p.hat.treat))
-  se.hat.star <- sqrt(var.est(li.hat.star, p.hat.star.control, p.hat.star.treat))
-  se.tilde <- sqrt(var.est(li.tilde, p.tilde.control, p.tilde.treat))
+  se.hat <- sqrt(var.est.RD(li.hat, p.hat.control, p.hat.treat))
+  se.hat.star <- sqrt(var.est.RD(li.hat.star, p.hat.star.control, p.hat.star.treat))
+  se.tilde <- sqrt(var.est.RD(li.tilde, p.tilde.control, p.tilde.treat))
   # se.firth <- sqrt(var.est(li.firth,p.firth.control,p.firth.treat))
-  se.tilde.star <- sqrt(var.est(li.tilde.star, p.tilde.star.control, p.tilde.star.treat))
-  se.tilde.doustar <- sqrt(var.est(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
+  se.tilde.star <- sqrt(var.est.RD(li.tilde.star, p.tilde.star.control, p.tilde.star.treat))
+  se.tilde.doustar <- sqrt(var.est.RD(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
 
 
   ## brm_firth
@@ -544,6 +545,7 @@ simulate.rd <- function(n, event, hypothesis) {
     alpha.start = rep(0, pa),
     beta.start = rep(0, pb), pa, pb, method = "firth"
   )
+
 
 
   #### CI and p.value

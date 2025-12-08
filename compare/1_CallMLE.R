@@ -1,7 +1,6 @@
 MLEst <- function(
-  param, y, x, va, vb, weight, max.step, thres, alpha.start,
-  beta.start, pa, pb, method = "brm", CI = "wald"
-) {
+    param, y, x, va, vb, weight, max.step, thres, alpha.start,
+    beta.start, pa, pb, method = "brm", CI = "wald") {
   ## starting values for parameter optimization
   if (is.null(alpha.start)) {
     alpha.start <- rep(0, pa)

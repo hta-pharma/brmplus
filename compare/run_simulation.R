@@ -2,7 +2,6 @@ library(doParallel)
 library(foreach)
 library(doRNG)
 
-source("getProbScalarRR.R")
 source("getProbScalarRD.R")
 source("1_CallMLE.R")
 source("1.1_MLE_Point.R")

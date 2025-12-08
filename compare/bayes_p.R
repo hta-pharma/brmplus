@@ -81,6 +81,7 @@ bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
 }
 
 
+
 #' g-computation helper functions
 #'
 #' @description
@@ -108,9 +109,13 @@ l.mu <- function(y1, x1, beta1, y0, x0, beta0) {
   return(cbind(li0, li1))
 }
 
-var.est <- function(li, p0, p1) {
+var.est.RR <- function(li, p0, p1) {
   cov <- var(li) / nrow(li)
   return(cov[1, 1] / (p0^2) + cov[2, 2] / (p1^2) - 2 * cov[1, 2] / (p0 * p1))
+}
+var.est.RD <- function(li, p0, p1) {
+  cov <- var(li) / nrow(li)
+  return((cov[1, 1] + cov[2, 2] - 2 * cov[1, 2]))
 }
 
 m <- function(x) {
