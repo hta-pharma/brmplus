@@ -263,7 +263,6 @@ simulate.rr <- function(n, event, hypothesis) {
   se.tilde.doustar <- sqrt(var.est.RR(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
 
 
-
   ## brm+exact
   est.exact <- exact("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm$point.est, est.brm$se.est, pa, pb)
   est.exact.ad <- exact("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
@@ -545,7 +544,6 @@ simulate.rd <- function(n, event, hypothesis) {
     alpha.start = rep(0, pa),
     beta.start = rep(0, pb), pa, pb, method = "firth"
   )
-
 
 
   #### CI and p.value

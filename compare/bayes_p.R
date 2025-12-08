@@ -81,7 +81,6 @@ bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
 }
 
 
-
 #' g-computation helper functions
 #'
 #' @description
