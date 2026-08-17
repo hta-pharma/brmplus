@@ -35,7 +35,7 @@ Suggests:
     testthat (>= 3.0.0)
 Imports: Rcpp (>= 1.0.10), stats
 LinkingTo: Rcpp, RcppArmadillo
-URL: http://github.com/mclements/rstpm2
-BugReports: http://github.com/mclements/rstpm2/issues
+URL: https://github.com/hta-pharma/brmplus
+BugReports: https://github.com/hta-pharma/brmplus/issues
 Config/testthat/edition: 3
 
