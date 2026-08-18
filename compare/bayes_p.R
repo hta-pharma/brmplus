@@ -76,7 +76,7 @@ bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
   list(
     point.est = mean(alpha), se.est = sd, conf.lower = min(et),
     conf.upper = max(et), ET = et, HPD = hpd,
-    p.value = mean(d > 0)
+    p.value = mean(d > 1)
   )
 }
 
