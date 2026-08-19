@@ -126,7 +126,7 @@ max.likelihood.firth.rd <- function(param, y, x, va, vb, alpha.start, beta.start
     fisher.info <- (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
 
 
-    return(list(fisher = fisher.info, fisher.invers = ginv(fisher.info/n), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info, fisher.invers = ginv(fisher.info / n), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
 
   compute.augmentation <- function(components, va, vb) {
