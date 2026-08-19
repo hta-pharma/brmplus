@@ -119,7 +119,7 @@ arma::vec compute_augmentation_cpp(
             va.col(a2) % vb.col(b3) % va.col(a4);
         }
         for (int b4 = 0; b4 < pb; ++b4) {
-          kba_m += k_rs(1 + b3, b4) *
+          kba_m += k_rs(1 + b3, 1 + b4) *
             (k_stu.col(2) + k_s_tu.col(2)) %
             va.col(a2) % vb.col(b3) % vb.col(b4);
         }
