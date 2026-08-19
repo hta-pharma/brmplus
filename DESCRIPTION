@@ -11,7 +11,7 @@ Authors@R: c(
            role = c("aut", "cre"),
            email = "jingxin.yan@mail.utoronto.ca"),
     person("Conor", "Klamann",
-           role = c("aut", "cre"),
+           role = c("aut"),
            email = "conor.klamann@utoronto.ca"),
     person("X. Gregory", "Chen", role = "aut"),
     person("Linbo", "Wang", role = "aut")
