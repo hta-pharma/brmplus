@@ -118,7 +118,7 @@ max.likelihood.firth.rr <- function(param, y, x, va, vb, alpha.start, beta.start
     k.b.bb <- as.vector(c.stu.beta * d2l.by.dbeta.2)
 
 
-    return(list(fisher = fisher.info, fisher.invers = solve(fisher.info), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info, fisher.invers = solve(fisher.info/n), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
 
 
