@@ -134,7 +134,7 @@ hii <- function(x, beta) {
   m.prime(x %*% beta) * rowSums(x %*% ginv(nrow(x) * fish(x, beta)) * x)
 }
 phi <- function(y, x, beta, p) {
-  x %*% ginv(fish(x, beta)) * as.vector(y - m(x %*% beta)) / p
+  x %*% ginv(fish(x, beta)) * as.vector(y - m(x %*% beta))
 }
 
 #' Transform point/SE/CI for RD to Fisher-z scale
