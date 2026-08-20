@@ -101,21 +101,21 @@ simulate.rr <- function(n, event, hypothesis) {
     if (hypothesis == "null") {
       alpha.true <- 0
       beta.true <- c(1.5, 0.6)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     } else {
       alpha.true <- 0.3
       beta.true <- c(1.65, 0.5)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     }
   } else {
     if (hypothesis == "null") {
       alpha.true <- 0
       beta.true <- c(-4.7, 0.5)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     } else {
       alpha.true <- 0.7
       beta.true <- c(-5.5, 0.5)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     }
   }
 
@@ -382,21 +382,21 @@ simulate.rd <- function(n, event, hypothesis) {
     if (hypothesis == "null") {
       alpha.true <- 0
       beta.true <- c(0.9, 0.5)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     } else {
       alpha.true <- 0.1
       beta.true <- c(0.9, 0.2)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     }
   } else {
     if (hypothesis == "null") {
       alpha.true <- 0
       beta.true <- c(-4.5, 0.5)
-      gamma.true <- c(0.2, -0.5)
+      gamma.true <- c(0, 0)
     } else {
       alpha.true <- 0.05
       beta.true <- c(-5.5, 0.2)
-      gamma.true <- c(0.2, -0.5) # rare
+      gamma.true <- c(0, 0) # rare
     }
   }
 
