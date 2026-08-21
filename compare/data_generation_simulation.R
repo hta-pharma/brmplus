@@ -269,81 +269,88 @@ simulate.rr <- function(n, event, hypothesis){
   est.exact <- exact('RR', y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm$point.est, est.brm$se.est, pa, pb)
   est.exact.ad <- exact('RR', y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
 
+  rd.point <- function(alpha) tanh(alpha)
+  rd.se <- function(alpha, se) se * (1 - tanh(alpha)^2)
+  rd.ci <- function(low, up) c(tanh(low), tanh(up))
+  rd.wald <- function(est, se) {
+    c(est - qnorm(0.975) * se, est + qnorm(0.975) * se)
+  }
+  rd.pvalue <- function(est, se) 2 * min(pnorm(est / se), 1 - pnorm(est / se))
+
   ###result
-  point.est <- as.vector(c(est.brm$point.est[1],
-                 est.brm.ad$point.est[1],
-                 log(est.CMH$measure[2,1]),
-                 est.lb$coefficients[1],
-                 est.lp$coefficients[1],
-                 est.rlp[1],
-                 est.brm.firth$point.est[1],
-                 est.brm$point.est[1],
-                 est.brm.ad$point.est[1],
+  point.est <- c(rd.point(est.brm.or$point.est[1]),
+                 rd.point(est.brm.ad$point.est[1]),
+                 rd.point(est.bayes$point.est),
+                 glm.est,
+                 e.lpm[1,1],
+                 est.MN.point,
+                 rd.point(est.brm.Firth$point.est[1]),
+                 rd.point(est.brm.or$point.est[1]),
+                 rd.point(est.brm.ad$point.est[1]),
                  alpha.hat,
                  alpha.hat.star,
                  alpha.tilde,
                  alpha.tilde.star,
-                 alpha.tilde.doustar))
-  se.est <- as.vector(c(est.brm$se.est[1],
-              est.brm.ad$se.est[1],
-              (log(est.CMH$measure[2,1])-log(est.CMH$measure[2,2]))/qnorm(0.975),
-              summary(est.lb)$coefficients[1,2],
-              summary(est.lp)$coefficients[1,2],
-              est.rlp[2],
-              est.brm.firth$se.est[1],
-              est.brm$se.est[1],
-              est.brm.ad$se.est[1],
+                 alpha.tilde.doustar)
+  se.est <- c(rd.se(est.brm.or$point.est[1], est.brm.or$se.est[1]),
+              rd.se(est.brm.ad$point.est[1], est.brm.ad$se.est[1]),
+              rd.se(est.bayes$point.est, est.bayes$se.est),
+              glm.se,
+              e.lpm[1,2],
+              est.MN.se,
+              rd.se(est.brm.Firth$point.est[1], est.brm.Firth$se.est[1]),
+              rd.se(est.brm.or$point.est[1], est.brm.or$se.est[1]),
+              rd.se(est.brm.ad$point.est[1], est.brm.ad$se.est[1]),
               se.hat,
               se.hat.star,
               se.tilde,
               se.tilde.star,
-              se.tilde.doustar))
-  con.lower <- as.vector(c(est.brm$conf.lower[1],
-                 est.brm.ad$conf.lower[1],
-                 log(est.CMH$measure[2,2]),
-                 confint.default(est.lb,level = 0.95)[1,1],
-                 confint.default(est.lp,level = 0.95)[1,1],
-                 est.rlp[3],
-                 est.brm.firth$conf.lower[1],
-                 est.exact$low[1],
-                 est.exact.ad$low[1],
-                 alpha.hat-qnorm(0.975)*se.hat,
-                 alpha.hat.star-qnorm(0.975)*se.hat.star,
-                 alpha.tilde-qnorm(0.975)*se.tilde,
-                 alpha.tilde.star-qnorm(0.975)*se.tilde.star,
-                 alpha.tilde.doustar-qnorm(0.975)*se.tilde.doustar))
-  con.upper <- as.vector(c(est.brm$conf.upper[1],
-                 est.brm.ad$conf.upper[1],
-                 log(est.CMH$measure[2,3]),
-                 confint.default(est.lb,level = 0.95)[1,2],
-                 confint.default(est.lp,level = 0.95)[1,2],
-                 est.rlp[4],
-                 est.brm.firth$conf.upper[1],
-                 est.exact$up[1],
-                 est.exact.ad$up[1],
-                 alpha.hat+qnorm(0.975)*se.hat,
-                 alpha.hat.star+qnorm(0.975)*se.hat.star,
-                 alpha.tilde+qnorm(0.975)*se.tilde,
-                 alpha.tilde.star+qnorm(0.975)*se.tilde.star,
-                 alpha.tilde.doustar+qnorm(0.975)*se.tilde.doustar))
-
-  p.value <- as.vector(c(est.brm$p.value[1],
+              se.tilde.doustar)
+  CI.low.or <- c(rd.ci(est.brm.or$conf.lower[1], est.brm.or$conf.upper[1])[1],
+                 rd.ci(est.brm.ad$conf.lower[1], est.brm.ad$conf.upper[1])[1],
+                 rd.ci(est.bayes$conf.lower, est.bayes$conf.upper)[1],
+                 glm.low,
+                 as.numeric(e.lpm[1,1]-1.96*e.lpm[1,2]),
+                 est.MN.CI$conf.int[1],
+                 rd.ci(est.brm.Firth$conf.lower[1], est.brm.Firth$conf.upper[1])[1],
+                 rd.ci(est.exact$low[1], est.exact$up[1])[1],
+                 rd.ci(est.exact.ad$low[1], est.exact.ad$up[1])[1],
+                 rd.wald(alpha.hat, se.hat)[1],
+                 rd.wald(alpha.hat.star, se.hat.star)[1],
+                 rd.wald(alpha.tilde, se.tilde)[1],
+                 rd.wald(alpha.tilde.star, se.tilde.star)[1],
+                 rd.wald(alpha.tilde.doustar, se.tilde.doustar)[1])
+  CI.up.or <- c(rd.ci(est.brm.or$conf.lower[1], est.brm.or$conf.upper[1])[2],
+                rd.ci(est.brm.ad$conf.lower[1], est.brm.ad$conf.upper[1])[2],
+                rd.ci(est.bayes$conf.lower, est.bayes$conf.upper)[2],
+                glm.up,
+                as.numeric(e.lpm[1,1]+1.96*e.lpm[1,2]),
+                est.MN.CI$conf.int[2],
+                rd.ci(est.brm.Firth$conf.lower[1], est.brm.Firth$conf.upper[1])[2],
+                rd.ci(est.exact$low[1], est.exact$up[1])[2],
+                rd.ci(est.exact.ad$low[1], est.exact.ad$up[1])[2],
+                rd.wald(alpha.hat, se.hat)[2],
+                rd.wald(alpha.hat.star, se.hat.star)[2],
+                rd.wald(alpha.tilde, se.tilde)[2],
+                rd.wald(alpha.tilde.star, se.tilde.star)[2],
+                rd.wald(alpha.tilde.doustar, se.tilde.doustar)[2])
+  p.value <- c(est.brm.or$p.value[1],
                est.brm.ad$p.value[1],
-               est.CMH$p.value[2,1],
-               summary(est.lb)$coefficients[1,4],
-               summary(est.lp)$coefficients[1,4],
-               est.rlp[5],
-               est.brm.firth$p.value[1],
+               est.bayes$p.value,
+               glm.p,
+               e.lpm[1,4],
+               rd.pvalue(est.MN.point,est.MN.se),
+               est.brm.Firth$p.value[1],
                est.exact$p[1],
                est.exact.ad$p[1],
-               2*min(pnorm(alpha.hat/se.hat),1-pnorm(alpha.hat/se.hat)),
-               2*min(pnorm(alpha.hat.star/se.hat.star),1-pnorm(alpha.hat.star/se.hat.star)),
-               2*min(pnorm(alpha.tilde/se.tilde),1-pnorm(alpha.tilde/se.tilde)),
-               2*min(pnorm(alpha.tilde.star/se.tilde.star),1-pnorm(alpha.tilde.star/se.tilde.star)),
-               2*min(pnorm(alpha.tilde.doustar/se.tilde.doustar),1-pnorm(alpha.tilde.doustar/se.tilde.doustar))))
+               rd.pvalue(alpha.hat, se.hat),
+               rd.pvalue(alpha.hat.star, se.hat.star),
+               rd.pvalue(alpha.tilde, se.tilde),
+               rd.pvalue(alpha.tilde.star, se.tilde.star),
+               rd.pvalue(alpha.tilde.doustar, se.tilde.doustar))
 
-  result.comp <- rbind(point.est,se.est,con.lower,con.upper,p.value)
-  colnames(result.comp) <- c("brm","brm_ad","CMH","log-binomial","log-poisson","robust log-possion","brm_firth",
+  result.comp <- rbind(point.est,se.est,CI.low.or,CI.up.or,p.value)
+  colnames(result.comp) <- c("brm","brm_ad","bayes","glm","lpm","MN", "firth",
                              "brm_exact","brm_exact_ad","g-computation","GC_BR","GC_FC","GC_FC_BR1","GC_FC_BR2")
   return(result.comp)
 }
