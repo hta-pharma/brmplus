@@ -225,7 +225,7 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   #beta_tilde
   fit.treat <- logistf(Y1 ~ V2.1,data = data.treat)
   fit.control <- logistf(Y0 ~ V2.0,data = data.control)
-
+  
   beta.tilde.treat <- fit.treat$coefficients
   beta.tilde.control <- fit.control$coefficients
 
@@ -239,9 +239,10 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   beta.tilde.doustar.control <- beta.tilde.control - colMeans(as.vector(hii(V.FC.control,beta.tilde.control))*((V.FC.control*as.vector(1-2*m(V.FC.control%*%beta.tilde.control)))%*%t(ginv(fish(V.FC.control,beta.tilde.control)))/2))
 
   #beta_tilde
-  p.tilde.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.treat)))
-  p.tilde.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.control)))
-  alpha.tilde <- log(p.tilde.treat/p.tilde.control)
+   V.FC.all <- cbind(1, v.2)
+   p.tilde.treat <- mean(m(V.FC.all %*% beta.tilde.treat))
+   p.tilde.control <-mean(m(V.FC.all %*% beta.tilde.control))
+   alpha.tilde <- log(p.tilde.treat/p.tilde.control)
 
   #beta_tilde_star
   p.tilde.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.star.treat)))
@@ -518,6 +519,9 @@ if (is.null(e.glm)) {
   alpha.hat.star <- p.hat.star.treat-p.hat.star.control
 
   #beta_tilde
+  V.FC.all <- cbind(1, v.2)
+  p.tilde.treat <- mean(m(V.FC.all %*% beta.tilde.treat))
+  p.tilde.control <-mean(m(V.FC.all %*% beta.tilde.control))
   p.tilde.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.treat)))
   p.tilde.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.control)))
   alpha.tilde <- p.tilde.treat-p.tilde.control
