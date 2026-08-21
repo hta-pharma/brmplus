@@ -599,7 +599,7 @@ simulate.rd <- function(n, event, hypothesis){
                est.bayes$p.value,
                summary(e.glm)$coefficients[1,4],
                summary(lpm)$coefficients[1,4],
-               min(pnorm(alpha.hat/se.hat),1-pnorm(alpha.hat/se.hat)),
+               p.MN,
                est.brm.Firth$p.value[1],
                est.exact$p[1],
                est.exact.ad$p[1],
