@@ -620,7 +620,7 @@ simulate.rd <- function(n, event, hypothesis){
                est.brm.Firth$p.value[1],
                est.exact$p[1],
                est.exact.ad$p[1],
-               2*min(pnorm(est.MN$point.est/est.MN$se.est),1-pnorm(est.MN$point.est/est.MN$se.est)),
+               2*min(pnorm(alpha.hat/se.hat),1-pnorm(alpha.hat/se.hat)),
                2*min(pnorm(alpha.hat.star/se.hat.star),1-pnorm(alpha.hat.star/se.hat.star)),
                2*min(pnorm(alpha.tilde/se.tilde),1-pnorm(alpha.tilde/se.tilde)),
                2*min(pnorm(alpha.tilde.star/se.tilde.star),1-pnorm(alpha.tilde.star/se.tilde.star)),
