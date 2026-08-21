@@ -178,8 +178,10 @@ firth_identity_rd_try <- function(dat,
   if (nrow(dd) == 0) {
     return(out_na())
   }
-  for (nm in need) if (any(!is.finite(dd[[nm]]))) {
-    return(out_na())
+  for (nm in need) {
+    if (any(!is.finite(dd[[nm]]))) {
+      return(out_na())
+    }
   }
 
   X <- tryCatch(
@@ -330,7 +332,6 @@ simulate.rr <- function(n, event, hypothesis) {
   ## robust log-poisson
   # est.rlp1 <- quasi.poisson(data.simulation$data)
   est.rlp <- firth_robust_logpois(data.simulation$data)
-
 
 
   ## brm + firth
@@ -659,7 +660,6 @@ run_scenario <- function(param, n, event, hypothesis, R,
     })
     NULL
   })
-
 
 
   clusterEvalQ(cl, {
