@@ -447,7 +447,7 @@ simulate.rd <- function(n, event, hypothesis){
   est.MN.CI <- diffscoreci(N1_1, Na1, N0_1, Na0, conf.level = 0.95)
   est.MN.se <- (est.MN.CI$conf.int[2]-est.MN.CI$conf.int[1])/(2*qnorm(0.975))
   est.MN <- get_estimate(est.MN.point,est.MN.se,c(est.MN.CI$conf.int[1],est.MN.CI$conf.int[2]))
-  p.MN <- pmin(pnorm(est.MN.point/est.MN.se), 1 - pnorm(est.MN.point/est.MN.se))
+  p.MN <- 2 * pmin(pnorm(est.MN.point/est.MN.se), 1 - pnorm(est.MN.point/est.MN.se))
 
 
   ##g-computaion & g-computation_BR
