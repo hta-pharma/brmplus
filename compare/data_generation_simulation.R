@@ -522,8 +522,6 @@ if (is.null(e.glm)) {
   V.FC.all <- cbind(1, v.2)
   p.tilde.treat <- mean(m(V.FC.all %*% beta.tilde.treat))
   p.tilde.control <-mean(m(V.FC.all %*% beta.tilde.control))
-  p.tilde.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.treat)))
-  p.tilde.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.control)))
   alpha.tilde <- p.tilde.treat-p.tilde.control
 
   p.tilde.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.star.treat)))
