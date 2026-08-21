@@ -200,20 +200,22 @@ simulate.rr <- function(n, event, hypothesis){
 
   V.FC.treat <- cbind(1,V2.1)
   V.FC.control <- cbind(1,V2.0)
+  V.FC.all <- cbind(1, v.2)
 
 
   beta.hat.star.treat <- beta.hat.treat + colMeans(hatvalues(est.treat)*phi(Y1,V.FC.treat,beta.hat.treat,sum(x==1)/n))
   beta.hat.star.control <- beta.hat.control + colMeans(hatvalues(est.control)*phi(Y0,V.FC.control,beta.hat.control,sum(x==0)/n))
 
-  #beta_hat
-  p.hat.treat <- mean(c(Y1,predict(est.treat,newdata = data.control, type = "response")))
-  p.hat.control <- mean(c(Y0,predict(est.control,newdata = data.treat, type = "response")))
-  alpha.hat <- log(p.hat.treat/p.hat.control)
+  # GC
+  p.hat.treat <- mean(m(V.FC.all %*% beta.hat.treat))
+  p.hat.control <- mean(m(V.FC.all %*% beta.hat.control))
+  alpha.hat <- log(p.hat.treat / p.hat.control)
 
-  #beta_hat_star
-  p.hat.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.hat.star.treat)))
-  p.hat.star.control <- mean(c(Y0,m(V.FC.treat%*%beta.hat.star.control)))
-  alpha.hat.star <- log(p.hat.star.treat/p.hat.star.control)
+  # GC-BR
+  p.hat.star.treat <- mean(m(V.FC.all %*% beta.hat.star.treat))
+  p.hat.star.control <- mean(m(V.FC.all %*% beta.hat.star.control))
+  alpha.hat.star <- log(p.hat.star.treat / p.hat.star.control)
+
 
   li.hat <- l.mu(Y1,V.FC.treat,beta.hat.treat,Y0,V.FC.control,beta.hat.control)
   li.hat.star <- l.mu(Y1,V.FC.treat,beta.hat.star.treat,Y0,V.FC.control,beta.hat.star.control)
@@ -237,20 +239,21 @@ simulate.rr <- function(n, event, hypothesis){
   beta.tilde.doustar.treat <- beta.tilde.treat - colMeans(as.vector(hii(V.FC.treat,beta.tilde.treat))*((V.FC.treat*as.vector(1-2*m(V.FC.treat%*%beta.tilde.treat)))%*%t(ginv(fish(V.FC.treat,beta.tilde.treat)))/2))
   beta.tilde.doustar.control <- beta.tilde.control - colMeans(as.vector(hii(V.FC.control,beta.tilde.control))*((V.FC.control*as.vector(1-2*m(V.FC.control%*%beta.tilde.control)))%*%t(ginv(fish(V.FC.control,beta.tilde.control)))/2))
 
-  #beta_tilde
-  p.tilde.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.treat)))
-  p.tilde.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.control)))
-  alpha.tilde <- log(p.tilde.treat/p.tilde.control)
+  # GC-FC
+  p.tilde.treat <- mean(m(V.FC.all %*% beta.tilde.treat))
+  p.tilde.control <- mean(m(V.FC.all %*% beta.tilde.control))
+  alpha.tilde <- log(p.tilde.treat / p.tilde.control)
 
-  #beta_tilde_star
-  p.tilde.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.star.treat)))
-  p.tilde.star.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.star.control)))
-  alpha.tilde.star <- log(p.tilde.star.treat/p.tilde.star.control)
+  # GC-FC-BR1
+  p.tilde.star.treat <- mean(m(V.FC.all %*% beta.tilde.star.treat))
+  p.tilde.star.control <- mean(m(V.FC.all %*% beta.tilde.star.control))
+  alpha.tilde.star <- log(p.tilde.star.treat / p.tilde.star.control)
 
-  #beta_tilde_starstar
-  p.tilde.doustar.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.doustar.treat)))
-  p.tilde.doustar.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.doustar.control)))
-  alpha.tilde.doustar <- log(p.tilde.doustar.treat/p.tilde.doustar.control)
+  # GC-FC-BR2
+  p.tilde.doustar.treat <- mean(m(V.FC.all %*% beta.tilde.doustar.treat))
+  p.tilde.doustar.control <- mean(m(V.FC.all %*% beta.tilde.doustar.control))
+  alpha.tilde.doustar <- log(
+  p.tilde.doustar.treat / p.tilde.doustar.control)
 
   li.tilde <- l.mu(Y1,V.FC.treat,beta.tilde.treat,Y0,V.FC.control,beta.tilde.control)
   li.tilde.star <- l.mu(Y1,V.FC.treat,beta.tilde.star.treat,Y0,V.FC.control,beta.tilde.star.control)
@@ -466,6 +469,7 @@ simulate.rd <- function(n, event, hypothesis){
 
   V.FC.treat <- cbind(1,V2.1)
   V.FC.control <- cbind(1,V2.0)
+  V.FC.all <- cbind(1, v.2)
 
 
   beta.hat.star.treat <- beta.hat.treat + colMeans(hatvalues(est.treat)*phi(Y1,V.FC.treat,beta.hat.treat,sum(x==1)/n))
@@ -487,29 +491,41 @@ simulate.rd <- function(n, event, hypothesis){
   beta.tilde.doustar.treat <- beta.tilde.treat - colMeans(as.vector(hii(V.FC.treat,beta.tilde.treat))*((V.FC.treat*as.vector(1-2*m(V.FC.treat%*%beta.tilde.treat)))%*%t(ginv(fish(V.FC.treat,beta.tilde.treat)))/2))
   beta.tilde.doustar.control <- beta.tilde.control - colMeans(as.vector(hii(V.FC.control,beta.tilde.control))*((V.FC.control*as.vector(1-2*m(V.FC.control%*%beta.tilde.control)))%*%t(ginv(fish(V.FC.control,beta.tilde.control)))/2))
 
-  p.hat.treat <- mean(c(Y1,m(V.FC.control%*%beta.hat.treat)))
-  p.hat.control <- mean(c(Y0,m(V.FC.treat%*%beta.hat.control)))
-  alpha.hat <- atanh(p.hat.treat-p.hat.control)
+  ## Standard g-computation:
+## average fitted potential-outcome risks over all n subjects
 
-  #beta_hat_star
-  p.hat.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.hat.star.treat)))
-  p.hat.star.control <- mean(c(Y0,m(V.FC.treat%*%beta.hat.star.control)))
-  alpha.hat.star <- atanh(p.hat.star.treat-p.hat.star.control)
+  # GC
+  p.hat.treat <- mean(m(V.FC.all %*% beta.hat.treat))
+  p.hat.control <- mean(m(V.FC.all %*% beta.hat.control))
+  alpha.hat <- atanh(p.hat.treat - p.hat.control)
 
-  #beta_tilde
-  p.tilde.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.treat)))
-  p.tilde.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.control)))
-  alpha.tilde <- atanh(p.tilde.treat-p.tilde.control)
+  # GC-BR
+  p.hat.star.treat <- mean(m(V.FC.all %*% beta.hat.star.treat))
+  p.hat.star.control <- mean(m(V.FC.all %*% beta.hat.star.control))
+  alpha.hat.star <- atanh(p.hat.star.treat - p.hat.star.control)
 
-  p.tilde.star.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.star.treat)))
-  p.tilde.star.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.star.control)))
-  alpha.tilde.star <- atanh(p.tilde.star.treat-p.tilde.star.control)
+  # GC-FC
+  p.tilde.treat <- mean(m(V.FC.all %*% beta.tilde.treat))
+  p.tilde.control <- mean(m(V.FC.all %*% beta.tilde.control))
+  alpha.tilde <- atanh(p.tilde.treat - p.tilde.control)
 
-  #beta_tilde_starstar
-  p.tilde.doustar.treat <-mean(c(Y1,m(V.FC.control%*%beta.tilde.doustar.treat)))
-  p.tilde.doustar.control <- mean(c(Y0,m(V.FC.treat%*%beta.tilde.doustar.control)))
-  alpha.tilde.doustar <- atanh(p.tilde.doustar.treat-p.tilde.doustar.control)
+  # GC-FC-BR1
+  p.tilde.star.treat <- mean(m(V.FC.all %*% beta.tilde.star.treat))
+  p.tilde.star.control <- mean(m(V.FC.all %*% beta.tilde.star.control))
+  alpha.tilde.star <- atanh(
+    p.tilde.star.treat - p.tilde.star.control
+  )
 
+  # GC-FC-BR2
+  p.tilde.doustar.treat <- mean(
+    m(V.FC.all %*% beta.tilde.doustar.treat)
+  )
+  p.tilde.doustar.control <- mean(
+    m(V.FC.all %*% beta.tilde.doustar.control)
+  )
+  alpha.tilde.doustar <- atanh(
+    p.tilde.doustar.treat - p.tilde.doustar.control
+  )
 
   li.hat <- l.mu(Y1,V.FC.treat,beta.hat.treat,Y0,V.FC.control,beta.hat.control)
   li.hat.star <- l.mu(Y1,V.FC.treat,beta.hat.star.treat,Y0,V.FC.control,beta.hat.star.control)
