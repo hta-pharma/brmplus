@@ -437,6 +437,7 @@ simulate.rd <- function(n, event, hypothesis){
   lpm <- lm(y~x+v.1+v.2-1,data = data.simulation$data)
   e.lpm <- coeftest(lpm, vcov = vcovHC(lpm,type = "HC3"))
   est.lpm <- get_estimate(e.lpm[1,1],e.lpm[1,2],as.numeric(c(e.lpm[1,1]-1.96*e.lpm[1,2],e.lpm[1,1]+1.96*e.lpm[1,2])))
+  p.lpm <- e.lpm[1, 4]
 
   ## Miettinen–Nurminen
   est.MN.point <- P1-P0
@@ -598,7 +599,7 @@ simulate.rd <- function(n, event, hypothesis){
                est.brm.ad$p.value[1],
                est.bayes$p.value,
                summary(e.glm)$coefficients[1,4],
-               summary(lpm)$coefficients[1,4],
+               p.lpm,
                p.MN,
                est.brm.Firth$p.value[1],
                est.exact$p[1],
