@@ -75,14 +75,78 @@ quasi.poisson <- function(data) {
   return(c(est, se.robust, lower, upper, p.robust))
 }
 
+# Firth-corrected log-binomial estimator. Returns
+# c(estimate, standard error, lower CI, upper CI, p-value), or NA on failure.
+firth_logbin_try <- function(dat, start = rep(-0.01, 3), eps = 1e-6,
+                             maxit = 5000, quiet = TRUE) {
+  out_na <- function() setNames(rep(NA_real_, 5), c("est", "se", "lcl", "ucl", "p"))
+  need <- c("y", "x", "v.1", "v.2")
+  if (!all(need %in% names(dat))) return(out_na())
+  dd <- dat[, need]
+  dd <- dd[stats::complete.cases(dd), , drop = FALSE]
+  if (nrow(dd) == 0) return(out_na())
+  for (nm in need) if (any(!is.finite(dd[[nm]]))) return(out_na())
+
+  fit <- tryCatch(
+    suppressWarnings(glm(y ~ x + v.1 + v.2 - 1,
+      family = binomial(link = "log"), data = dd, start = start,
+      method = "brglmFit", type = "AS_mean",
+      control = brglmControl(epsilon = eps, maxit = maxit)
+    )),
+    error = function(e) {
+      if (!quiet) message("firth_logbin_try error: ", conditionMessage(e))
+      NULL
+    }
+  )
+  if (is.null(fit)) return(out_na())
+
+  est <- tryCatch(unname(coef(fit)[["x"]]), error = function(e) NA_real_)
+  V <- tryCatch(vcov(fit), error = function(e) NULL)
+  se <- if (!is.null(V) && "x" %in% rownames(V) && "x" %in% colnames(V)) {
+    sqrt(unname(V["x", "x"]))
+  } else NA_real_
+  if (!is.finite(est) || !is.finite(se) || se <= 0) return(out_na())
+
+  p <- 2 * (1 - pnorm(abs(est / se)))
+  ci <- est + c(-1.96, 1.96) * se
+  c(est, se, ci[1], ci[2], p)
+}
+
+firth_logpois <- function(dat) {
+  fit <- glm(y ~ x + v.1 + v.2 - 1,
+    family = poisson(link = "log"), data = dat,
+    method = "brglmFit", type = "MPL_Jeffreys",
+    control = brglmControl(epsilon = 1e-6, maxit = 5000)
+  )
+  est <- coef(fit)["x"]
+  se <- sqrt(vcov(fit)["x", "x"])
+  p <- 2 * (1 - pnorm(abs(est / se)))
+  ci <- est + c(-1.96, 1.96) * se
+  c(est, se, ci[1], ci[2], p)
+}
+
+firth_robust_logpois <- function(dat) {
+  fit <- glm(y ~ x + v.1 + v.2 - 1,
+    family = poisson(link = "log"), data = dat,
+    method = "brglmFit", type = "MPL_Jeffreys", x = TRUE,
+    control = brglmControl(epsilon = 1e-6, maxit = 5000)
+  )
+  est <- coef(fit)["x"]
+  V <- sandwich::vcovHC(fit, type = "HC0")
+  se <- sqrt(V["x", "x"])
+  p <- 2 * (1 - pnorm(abs(est / se)))
+  ci <- est + c(-1.96, 1.96) * se
+  c(est, se, ci[1], ci[2], p)
+}
+
 #' Simulate and Compare RR Estimators Across Multiple Methods
 #'
 #' @description
 #' Generates data under an RR parametrization and computes estimates, SEs, CIs,
-#' and p-values for a suite of methods: BRM MLE, BRM+adaptive (Bayes fallback),
+#' and p-values for a suite of methods: BRM MLE,
 #' CMH, log-binomial, log-Poisson, robust log-Poisson (quasi-Poisson + HC0),
-#' BRM+Firth, profile-exact (based on BRM), and several g-computation variants
-#' (plain, bias-reduction, Firth-corrected/FC with bias-reduction BR1/BR2). Returns a 5×14 matrix:
+#' Firth-corrected log-binomial/log-Poisson/robust log-Poisson, and several
+#' g-computation variants. Returns a 5×13 matrix:
 #' rows = \code{point.est}, \code{se.est}, \code{con.lower}, \code{con.upper}, \code{p.value};
 #' columns labeled by method.
 #'
@@ -91,9 +155,9 @@ quasi.poisson <- function(data) {
 #' @param hypothesis Character. \code{"null"} or \code{"alternative"}.
 #'
 #' @return A numeric matrix with rows \code{point.est}, \code{se.est},
-#' \code{con.lower}, \code{con.upper}, \code{p.value} and 14 method columns:
-#' \code{c("brm","brm_ad","CMH","log-binomial","log-poisson","robust log-possion",
-#' "brm_firth","brm_exact","brm_exact_ad","g-computation","GC_BR","GC_FC","GC_FC_BR1","GC_FC_BR2")}.
+#' \code{con.lower}, \code{con.upper}, \code{p.value} and 13 method columns:
+#' \code{c("brm","CMH","log-binomial","log-poisson","robust log-poisson",
+#' "LB-FC","LP-FC","RLP-FC","g-computation","GC_BR","GC_FC","GC_FC_BR1","GC_FC_BR2")}.
 #'
 
 simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1000000L) {
@@ -167,23 +231,10 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
   est.rlp <- quasi.poisson(data.simulation$data)
 
-  ## brm + firth
-
-  est.brm.firth <- MLEst("RR", y, x, va, vb, weight, max.step, thres,
-    alpha.start = rep(0, pa),
-    beta.start = rep(0, pb), pa, pb, method = "firth"
-  )
-
-  ## brm_ad
-  est.brm.ad <- est.brm
-  if (P0 == 0 | P0 == 1 | P1 == 0 | P1 == 1) {
-    est.bayes <- bayes_est_RR(Na0, Na1, N0_1, N1_1)
-    est.brm.ad$point.est[1] <- est.bayes$point.est
-    est.brm.ad$se.est[1] <- est.bayes$se.est
-    est.brm.ad$conf.lower[1] <- est.bayes$conf.lower
-    est.brm.ad$conf.upper[1] <- est.bayes$conf.upper
-    est.brm.ad$p.value[1] <- est.bayes$p.value
-  }
+  ## Firth-corrected log-link methods
+  est.lb.fc <- firth_logbin_try(data.simulation$data)
+  est.lp.fc <- firth_logpois(data.simulation$data)
+  est.rlp.fc <- firth_robust_logpois(data.simulation$data)
 
   ## g-computaion & g-computation_BR
   Y1 <- y[which(x == 1)]
@@ -210,8 +261,8 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   beta.hat.star.control <- beta.hat.control + colMeans(hatvalues(est.control) * phi(Y0, V.FC.control, beta.hat.control, sum(x == 0) / n))
 
   # beta_hat
-  p.hat.treat <- mean(c(Y1, predict(est.treat, newdata = data.control, type = "response")))
-  p.hat.control <- mean(c(Y0, predict(est.control, newdata = data.treat, type = "response")))
+  p.hat.treat <- mean(c(Y1, m(V.FC.control %*% beta.hat.treat)))
+  p.hat.control <- mean(c(Y0, m(V.FC.treat %*% beta.hat.control)))
   alpha.hat <- log(p.hat.treat / p.hat.control)
 
   # beta_hat_star
@@ -266,23 +317,16 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   se.tilde.doustar <- sqrt(var.est.RR(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
 
 
-  ## brm+exact
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
-  est.exact <- exact("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm$point.est, est.brm$se.est, pa, pb)
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 1L)
-  est.exact.ad <- exact("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
-
   ### result
   point.est <- as.vector(c(
     est.brm$point.est[1],
-    est.brm.ad$point.est[1],
     log(est.CMH$measure[2, 1]),
     est.lb$coefficients[1],
     est.lp$coefficients[1],
     est.rlp[1],
-    est.brm.firth$point.est[1],
-    est.brm$point.est[1],
-    est.brm.ad$point.est[1],
+    est.lb.fc[1],
+    est.lp.fc[1],
+    est.rlp.fc[1],
     alpha.hat,
     alpha.hat.star,
     alpha.tilde,
@@ -291,14 +335,13 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   ))
   se.est <- as.vector(c(
     est.brm$se.est[1],
-    est.brm.ad$se.est[1],
     (log(est.CMH$measure[2, 1]) - log(est.CMH$measure[2, 2])) / qnorm(0.975),
     summary(est.lb)$coefficients[1, 2],
     summary(est.lp)$coefficients[1, 2],
     est.rlp[2],
-    est.brm.firth$se.est[1],
-    est.brm$se.est[1],
-    est.brm.ad$se.est[1],
+    est.lb.fc[2],
+    est.lp.fc[2],
+    est.rlp.fc[2],
     se.hat,
     se.hat.star,
     se.tilde,
@@ -307,14 +350,13 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   ))
   con.lower <- as.vector(c(
     est.brm$conf.lower[1],
-    est.brm.ad$conf.lower[1],
     log(est.CMH$measure[2, 2]),
     confint.default(est.lb, level = 0.95)[1, 1],
     confint.default(est.lp, level = 0.95)[1, 1],
     est.rlp[3],
-    est.brm.firth$conf.lower[1],
-    est.exact$low[1],
-    est.exact.ad$low[1],
+    est.lb.fc[3],
+    est.lp.fc[3],
+    est.rlp.fc[3],
     alpha.hat - qnorm(0.975) * se.hat,
     alpha.hat.star - qnorm(0.975) * se.hat.star,
     alpha.tilde - qnorm(0.975) * se.tilde,
@@ -323,14 +365,13 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   ))
   con.upper <- as.vector(c(
     est.brm$conf.upper[1],
-    est.brm.ad$conf.upper[1],
     log(est.CMH$measure[2, 3]),
     confint.default(est.lb, level = 0.95)[1, 2],
     confint.default(est.lp, level = 0.95)[1, 2],
     est.rlp[4],
-    est.brm.firth$conf.upper[1],
-    est.exact$up[1],
-    est.exact.ad$up[1],
+    est.lb.fc[4],
+    est.lp.fc[4],
+    est.rlp.fc[4],
     alpha.hat + qnorm(0.975) * se.hat,
     alpha.hat.star + qnorm(0.975) * se.hat.star,
     alpha.tilde + qnorm(0.975) * se.tilde,
@@ -340,14 +381,13 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
   p.value <- as.vector(c(
     est.brm$p.value[1],
-    est.brm.ad$p.value[1],
     est.CMH$p.value[2, 1],
     summary(est.lb)$coefficients[1, 4],
     summary(est.lp)$coefficients[1, 4],
     est.rlp[5],
-    est.brm.firth$p.value[1],
-    est.exact$p[1],
-    est.exact.ad$p[1],
+    est.lb.fc[5],
+    est.lp.fc[5],
+    est.rlp.fc[5],
     2 * min(pnorm(alpha.hat / se.hat), 1 - pnorm(alpha.hat / se.hat)),
     2 * min(pnorm(alpha.hat.star / se.hat.star), 1 - pnorm(alpha.hat.star / se.hat.star)),
     2 * min(pnorm(alpha.tilde / se.tilde), 1 - pnorm(alpha.tilde / se.tilde)),
@@ -357,8 +397,8 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
   result.comp <- rbind(point.est, se.est, con.lower, con.upper, p.value)
   colnames(result.comp) <- c(
-    "brm", "brm_ad", "CMH", "log-binomial", "log-poisson", "robust log-possion", "brm_firth",
-    "brm_exact", "brm_exact_ad", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
+    "brm", "CMH", "log-binomial", "log-poisson", "robust log-poisson",
+    "LB-FC", "LP-FC", "RLP-FC", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
   )
   return(result.comp)
 }
@@ -367,10 +407,10 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 #'
 #' @description
 #' Generates data under an RD parametrization and computes estimates, SEs, CIs,
-#' and p-values for multiple methods: BRM MLE (original and adaptive Bayes),
+#' and p-values for multiple methods: BRM MLE,
 #' Bayesian RD with simple conjugate prior, GLM with identity link (if feasible),
-#' LPM with robust SEs, Miettinen–Nurminen (MN), BRM+Firth, profile-exact, and
-#' g-computation variants (plain, BR, FC and BR1/BR2). Returns a 5×14 matrix with
+#' LPM with robust SEs, Miettinen–Nurminen (MN), and g-computation variants
+#' (plain, BR, FC and BR1/BR2). Returns a 5×10 matrix with
 #' rows \code{point.est}, \code{se.est}, \code{CI.low.or}, \code{CI.up.or}, \code{p.value}.
 #'
 #' @param n Integer. Sample size.
@@ -378,9 +418,8 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 #' @param hypothesis Character. \code{"null"} or \code{"alternative"}.
 #'
 #' @return A numeric matrix with rows \code{point.est}, \code{se.est},
-#' \code{CI.low.or}, \code{CI.up.or}, \code{p.value} and 14 method columns:
-#' \code{c("brm","brm_ad","bayes","glm","lpm","MN","firth","brm_exact","brm_exact_ad",
-#' "g-computation","GC_BR","GC_FC","GC_FC_BR1","GC_FC_BR2")}.
+#' \code{CI.low.or}, \code{CI.up.or}, \code{p.value} and 10 method columns:
+#' \code{c("brm","bayes","glm","lpm","MN","g-computation","GC_BR","GC_FC","GC_FC_BR1","GC_FC_BR2")}.
 
 simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1000000L) {
   if (!is.null(seed)) set.seed(seed)
@@ -435,16 +474,6 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
     beta.start = rep(0, pb), pa, pb
   )
 
-  est.brm.ad <- est.brm.or
-  if (P0 == 0 | P0 == 1 | P1 == 0 | P1 == 1) {
-    est.bayes <- bayes_est_RD(Na0, Na1, N0_1, N1_1)
-    est.brm.ad$point.est[1] <- est.bayes$point.est
-    est.brm.ad$se.est[1] <- est.bayes$se.est
-    est.brm.ad$conf.lower[1] <- est.bayes$conf.lower
-    est.brm.ad$conf.upper[1] <- est.bayes$conf.upper
-    est.brm.ad$p.value[1] <- est.bayes$p.value
-  }
-
   ## bayesian prior
   est.bayes <- bayes_est_RD(Na0, Na1, N0_1, N1_1)
 
@@ -482,8 +511,8 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   est.MN.point <- P1 - P0
   est.MN.CI <- diffscoreci(N1_1, Na1, N0_1, Na0, conf.level = 0.95)
   est.MN.se <- (est.MN.CI$conf.int[2] - est.MN.CI$conf.int[1]) / (2 * qnorm(0.975))
-  # est.MN <- get_estimate(est.MN.point,est.MN.se,c(est.MN.CI$conf.int[1],est.MN.CI$conf.int[2]))
-  #  p.MN <- 2*(1-pnorm(abs(z2stat(N1_1,Na1,N0_1,Na0,dif=0))))
+  stat.MN <- PropCIs:::z2stat(P1, Na1, P0, Na0, dif = 0)
+  p.MN <- pchisq(stat.MN, df = 1, lower.tail = FALSE) 
 
 
   ## g-computaion & g-computation_BR
@@ -566,103 +595,70 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   se.tilde.doustar <- sqrt(var.est.RD(li.tilde.doustar, p.tilde.doustar.control, p.tilde.doustar.treat))
 
 
-  ## brm_firth
-  est.brm.Firth <- MLEst("RD", y, x, va, vb, weight, max.step, thres,
-    alpha.start = rep(0, pa),
-    beta.start = rep(0, pb), pa, pb, method = "firth"
-  )
-
-
-  #### CI and p.value
-
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 1L)
-  est.exact.ad <- exact("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb)
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
-  est.exact <- exact("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.or$point.est, est.brm.or$se.est, pa, pb)
-
-  rd.point <- function(alpha) tanh(alpha)
-  rd.se <- function(alpha, se) se * (1 - tanh(alpha)^2)
-  rd.ci <- function(low, up) c(tanh(low), tanh(up))
+  alpha.point <- function(rd) atanh(rd)
+  alpha.se <- function(rd, se) { 
+    se / (1 - rd^2)}
+  alpha.ci <- function(low, up) {
+    c(atanh(low), atanh(up))}
   rd.wald <- function(est, se) {
-    c(est - qnorm(0.975) * se, est + qnorm(0.975) * se)
+  c(est - qnorm(0.975) * se, est + qnorm(0.975) * se)
   }
-  rd.pvalue <- function(est, se) 2 * min(pnorm(est / se), 1 - pnorm(est / se))
-
+  rd.pvalue <- function(est, se) {
+    2 * min(pnorm(est / se), 1 - pnorm(est / se))
+  } 
   ### result
   point.est <- c(
-    rd.point(est.brm.or$point.est[1]),
-    rd.point(est.brm.ad$point.est[1]),
-    rd.point(est.bayes$point.est),
-    glm.est,
-    e.lpm[1, 1],
-    est.MN.point,
-    rd.point(est.brm.Firth$point.est[1]),
-    rd.point(est.brm.or$point.est[1]),
-    rd.point(est.brm.ad$point.est[1]),
-    alpha.hat,
-    alpha.hat.star,
-    alpha.tilde,
-    alpha.tilde.star,
-    alpha.tilde.doustar
+    est.brm.or$point.est[1],
+    est.bayes$point.est,
+    alpha.point(glm.est),
+    alpha.point(e.lpm[1, 1]),
+    alpha.point(est.MN.point),
+    alpha.point(alpha.hat),
+    alpha.point(alpha.hat.star),
+    alpha.point(alpha.tilde),
+    alpha.point(alpha.tilde.star),
+    alpha.point(alpha.tilde.doustar)
   )
   se.est <- c(
-    rd.se(est.brm.or$point.est[1], est.brm.or$se.est[1]),
-    rd.se(est.brm.ad$point.est[1], est.brm.ad$se.est[1]),
-    rd.se(est.bayes$point.est, est.bayes$se.est),
-    glm.se,
-    e.lpm[1, 2],
-    est.MN.se,
-    rd.se(est.brm.Firth$point.est[1], est.brm.Firth$se.est[1]),
-    rd.se(est.brm.or$point.est[1], est.brm.or$se.est[1]),
-    rd.se(est.brm.ad$point.est[1], est.brm.ad$se.est[1]),
-    se.hat,
-    se.hat.star,
-    se.tilde,
-    se.tilde.star,
-    se.tilde.doustar
-  )
+    est.brm.or$se.est[1],
+    est.bayes$se.est,
+    alpha.se(glm.est, glm.se),
+    alpha.se(e.lpm[1, 1], e.lpm[1, 2]),
+    alpha.se(est.MN.point, est.MN.se),
+    alpha.se(alpha.hat, se.hat),
+    alpha.se(alpha.hat.star, se.hat.star),
+    alpha.se(alpha.tilde, se.tilde),
+    alpha.se(alpha.tilde.star, se.tilde.star),
+    alpha.se(alpha.tilde.doustar, se.tilde.doustar)) 
   CI.low.or <- c(
-    rd.ci(est.brm.or$conf.lower[1], est.brm.or$conf.upper[1])[1],
-    rd.ci(est.brm.ad$conf.lower[1], est.brm.ad$conf.upper[1])[1],
-    rd.ci(est.bayes$conf.lower, est.bayes$conf.upper)[1],
-    glm.low,
-    as.numeric(e.lpm[1, 1] - 1.96 * e.lpm[1, 2]),
-    est.MN.CI$conf.int[1],
-    rd.ci(est.brm.Firth$conf.lower[1], est.brm.Firth$conf.upper[1])[1],
-    rd.ci(est.exact$low[1], est.exact$up[1])[1],
-    rd.ci(est.exact.ad$low[1], est.exact.ad$up[1])[1],
-    rd.wald(alpha.hat, se.hat)[1],
-    rd.wald(alpha.hat.star, se.hat.star)[1],
-    rd.wald(alpha.tilde, se.tilde)[1],
-    rd.wald(alpha.tilde.star, se.tilde.star)[1],
-    rd.wald(alpha.tilde.doustar, se.tilde.doustar)[1]
-  )
+    est.brm.or$conf.lower[1],
+    est.bayes$conf.lower,
+    atanh(glm.low),
+    atanh(e.lpm[1, 1] - 1.96 * e.lpm[1, 2]),
+    atanh(est.MN.CI$conf.int[1]),
+    atanh(rd.wald(alpha.hat, se.hat)[1]),
+    atanh(rd.wald(alpha.hat.star, se.hat.star)[1]),
+    atanh(rd.wald(alpha.tilde, se.tilde)[1]),
+    atanh(rd.wald(alpha.tilde.star, se.tilde.star)[1]),
+    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[1]))
+
   CI.up.or <- c(
-    rd.ci(est.brm.or$conf.lower[1], est.brm.or$conf.upper[1])[2],
-    rd.ci(est.brm.ad$conf.lower[1], est.brm.ad$conf.upper[1])[2],
-    rd.ci(est.bayes$conf.lower, est.bayes$conf.upper)[2],
-    glm.up,
-    as.numeric(e.lpm[1, 1] + 1.96 * e.lpm[1, 2]),
-    est.MN.CI$conf.int[2],
-    rd.ci(est.brm.Firth$conf.lower[1], est.brm.Firth$conf.upper[1])[2],
-    rd.ci(est.exact$low[1], est.exact$up[1])[2],
-    rd.ci(est.exact.ad$low[1], est.exact.ad$up[1])[2],
-    rd.wald(alpha.hat, se.hat)[2],
-    rd.wald(alpha.hat.star, se.hat.star)[2],
-    rd.wald(alpha.tilde, se.tilde)[2],
-    rd.wald(alpha.tilde.star, se.tilde.star)[2],
-    rd.wald(alpha.tilde.doustar, se.tilde.doustar)[2]
-  )
+    est.brm.or$conf.upper[1],
+    est.bayes$conf.upper,
+    atanh(glm.up),
+    atanh(e.lpm[1, 1] + 1.96 * e.lpm[1, 2]),
+    atanh(est.MN.CI$conf.int[2]),
+    atanh(rd.wald(alpha.hat, se.hat)[2]),
+    atanh(rd.wald(alpha.hat.star, se.hat.star)[2]),
+    atanh(rd.wald(alpha.tilde, se.tilde)[2]),
+    atanh(rd.wald(alpha.tilde.star, se.tilde.star)[2]),
+    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[2]) )
   p.value <- c(
     est.brm.or$p.value[1],
-    est.brm.ad$p.value[1],
     est.bayes$p.value,
     glm.p,
     e.lpm[1, 4],
-    rd.pvalue(est.MN.point, est.MN.se),
-    est.brm.Firth$p.value[1],
-    est.exact$p[1],
-    est.exact.ad$p[1],
+    p.MN,
     rd.pvalue(alpha.hat, se.hat),
     rd.pvalue(alpha.hat.star, se.hat.star),
     rd.pvalue(alpha.tilde, se.tilde),
@@ -672,8 +668,7 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
   result.comp <- rbind(point.est, se.est, CI.low.or, CI.up.or, p.value)
   colnames(result.comp) <- c(
-    "brm", "brm_ad", "bayes", "glm", "lpm", "MN", "firth",
-    "brm_exact", "brm_exact_ad", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
+    "brm", "bayes", "glm", "lpm", "MN", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
   )
   return(result.comp)
 }

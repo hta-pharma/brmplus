@@ -3,6 +3,7 @@ Type: Package
 Title: Extended Binary Regression Models for Small-Sample and Rare-Event Studies
 Version: 1.1.0
 Date: 2026-05-29
+Depends: R (>= 3.5.0)
 Authors@R: c(
     person("Jingxin", "Yan",
            role = c("aut", "cre"),

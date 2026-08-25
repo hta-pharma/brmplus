@@ -32,7 +32,7 @@ mle_var_rd <- function(x, alpha_ml, beta_ml, va, vb, weights) {
   s1 <- p1 * (1 - p1)
   sA <- pA * (1 - pA)
 
-  rho <- as_vector(tanh(va %*% alpha_ml)) # estimated risk differences
+  rho <- as.vector(tanh(va %*% alpha_ml)) # estimated risk differences
 
   expect_dl_by_dpA_squared <- 1 / sA
   dp0_by_dphi <- s0 * s1 / (s0 + s1)

@@ -9,9 +9,6 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 
 
-//' @importFrom Rcpp evalCpp
-//' @useDynLib brm
-//' @exportPattern ˆ[[:alpha:]]+
 // [[Rcpp::export]]
 arma::mat mat_vec_mul(const arma::mat & m, const arma::colvec & v) {
   arma::mat r = m * v;

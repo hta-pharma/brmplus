@@ -1,3 +1,5 @@
-..Rcheck
-gz$
-Makefile
+^.*[.]Rcheck$
+^.*[.]tar[.]gz$
+^Makefile$
+^compare/run_.*[.]R$
+^compare/.*[.]sh$

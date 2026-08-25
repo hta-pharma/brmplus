@@ -16,5 +16,5 @@
 #'
 #'
 #' @docType package
-#' @name brm-package
+#' @name brmplus-package
 NULL

@@ -4,5 +4,5 @@ test_that("mat_vec_mul works", {
   r <- c(13, 13)
   dim(r) <- c(2, 1)
 
-  expect_equal(r, mat_vec_mul(m, v))
+  expect_equal(r, brmplus:::mat_vec_mul(m, v))
 })

@@ -29,20 +29,18 @@
 #' }
 #'
 
-bayes_est_RD <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .5,
-                         M = 1e5, conf = 0.95) {
-  p1 <- rbeta(M, a1 + N1_1, b1 + Na1 - N1_1)
-  p0 <- rbeta(M, a0 + N0_1, b0 + Na0 - N0_1)
-  d <- p1 - p0
+bayes_est_RD <- function(Na0, Na1, N0_1, N1_1, a1=.5, b1=.5, a0=.5, b0=.5,
+                      M=1e5, conf=0.95){
+  p1 <- rbeta(M, a1 + N1_1, b1 + Na1-N1_1)
+  p0 <- rbeta(M, a0 + N0_1, b0 + Na0-N0_1)
+  d  <- p1 - p0
   alpha <- atanh(d)
   sd <- sd(alpha)
-  et <- quantile(alpha, c((1 - conf) / 2, 1 - (1 - conf) / 2))
-  hpd <- HDInterval::hdi(alpha, credMass = conf)
-  list(
-    point.est = mean(alpha), se.est = sd, conf.lower = min(et),
-    conf.upper = max(et), ET = et, HPD = hpd,
-    p.value = mean(d > 0)
-  )
+  et <- quantile(alpha, c((1-conf)/2, 1-(1-conf)/2))
+  hpd<- HDInterval::hdi(alpha, credMass=conf)
+  list(point.est = mean(alpha), se.est = sd, conf.lower = min(et),
+       conf.upper = max(et), ET = et, HPD = hpd,
+       p.value = mean(d>0))
 }
 
 #' Bayesian estimator for Risk Ratio on log scale
@@ -64,21 +62,20 @@ bayes_est_RD <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
 #'         redefine as \eqn{\Pr(\log RR>0)} if desired).}
 #' }
 
-bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .5,
-                         M = 1e5, conf = 0.95) {
-  p1 <- rbeta(M, a1 + N1_1, b1 + Na1 - N1_1)
-  p0 <- rbeta(M, a0 + N0_1, b0 + Na0 - N0_1)
-  d <- p1 / p0
+bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1=.5, b1=.5, a0=.5, b0=.5,
+                         M=1e5, conf=0.95){
+  p1 <- rbeta(M, a1 + N1_1, b1 + Na1-N1_1)
+  p0 <- rbeta(M, a0 + N0_1, b0 + Na0-N0_1)
+  d  <- p1/p0
   alpha <- log(d)
   sd <- sd(alpha)
-  et <- quantile(alpha, c((1 - conf) / 2, 1 - (1 - conf) / 2))
-  hpd <- HDInterval::hdi(alpha, credMass = conf)
-  list(
-    point.est = mean(alpha), se.est = sd, conf.lower = min(et),
-    conf.upper = max(et), ET = et, HPD = hpd,
-    p.value = mean(d > 1)
-  )
+  et <- quantile(alpha, c((1-conf)/2, 1-(1-conf)/2))
+  hpd<- HDInterval::hdi(alpha, credMass=conf)
+  list(point.est = mean(alpha), se.est = sd, conf.lower = min(et),
+       conf.upper = max(et), ET = et, HPD = hpd,
+       p.value = mean(d>1))
 }
+
 
 
 #' g-computation helper functions
@@ -87,55 +84,54 @@ bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
 #' This set of helper functions (\code{mu.est}, \code{l.mu}, \code{var.est},
 #' \code{m}, \code{m.prime}, \code{m.prime.prime}, \code{fish}, \code{hii},
 #' \code{phi}) are implementations used in the
-#' g-computation framework.
+#' g-computation framework.  
 #' The code is written according to the methodology described in
 #' \url{https://arxiv.org/pdf/2509.07369}.
 
-mu.est <- function(y, x, beta) {
-  mean(c(y, m(x %*% beta)))
+mu.est <- function(y,x,beta){mean(c(y,m(x%*%beta)))}
+
+
+l.mu <- function(y1,x1,beta1,y0,x0,beta0){
+    mi <- c(m(x1%*%beta1),m(x0%*%beta0))
+    mi1 <- c(m(x1%*%beta1),m(x0%*%beta1))
+    mi0 <- c(m(x1%*%beta0),m(x0%*%beta0))
+    mu1 <- mu.est(y1,x0,beta1)
+    mu0 <- mu.est(y0,x1,beta0)
+    
+    li1 <- c((1+hii(x1,beta1))*(y1-mi[1:length(y1)]),rep(0,length(y0)))/(length(y1)/(length(c(y1,y0))))+mi1-mu1
+    li0 <- c(rep(0,length(y1)),(1+hii(x0,beta0))*(y0-mi[(length(y1)+1):length(mi)]))/(length(y0)/(length(c(y1,y0))))+mi0-mu0
+    return(cbind(li0,li1))
+  }
+
+var.est.RR <- function(li,p0,p1){
+    cov <- var(li)/nrow(li)
+    return(cov[1,1]/(p0^2)+cov[2,2]/(p1^2)-2*cov[1,2]/(p0*p1))
+  }
+var.est.RD <- function(li,p0,p1){
+    cov <- var(li)/nrow(li)
+    return((cov[1,1]+cov[2,2]-2*cov[1,2]))
+  }
+  
+m <- function(x) plogis(x)
+m.prime <- function(x){
+  s <- plogis(x)
+  s * (1 - s)
+}
+
+m.prime.prime <- function(x){
+  s <- plogis(x)
+  s * (1 - s) * (1 - 2*s)
 }
 
 
-l.mu <- function(y1, x1, beta1, y0, x0, beta0) {
-  mi <- c(m(x1 %*% beta1), m(x0 %*% beta0))
-  mi1 <- c(m(x1 %*% beta1), m(x0 %*% beta1))
-  mi0 <- c(m(x1 %*% beta0), m(x0 %*% beta0))
-  mu1 <- mu.est(y1, x0, beta1)
-  mu0 <- mu.est(y0, x1, beta0)
-
-  li1 <- c((1 + hii(x1, beta1)) * (y1 - mi[1:length(y1)]), rep(0, length(y0))) / (length(y1) / (length(c(y1, y0)))) + mi1 - mu1
-  li0 <- c(rep(0, length(y1)), (1 + hii(x0, beta0)) * (y0 - mi[(length(y1) + 1):length(mi)])) / (length(y0) / (length(c(y1, y0)))) + mi0 - mu0
-  return(cbind(li0, li1))
+fish <- function(x, beta){
+  eta <- drop(x %*% beta)
+  w <- m.prime(eta)                 # length n
+  # t(x) %*% diag(w) %*% x  �ȼ���  crossprod(x * w, x)
+  crossprod(x * w, x) / nrow(x)
 }
-
-var.est.RR <- function(li, p0, p1) {
-  cov <- var(li) / nrow(li)
-  return(cov[1, 1] / (p0^2) + cov[2, 2] / (p1^2) - 2 * cov[1, 2] / (p0 * p1))
-}
-var.est.RD <- function(li, p0, p1) {
-  cov <- var(li) / nrow(li)
-  return((cov[1, 1] + cov[2, 2] - 2 * cov[1, 2]))
-}
-
-m <- function(x) {
-  exp(x) / (1 + exp(x))
-}
-m.prime <- function(x) {
-  exp(x) / (1 + exp(x))^2
-}
-m.prime.prime <- function(x) {
-  exp(x) * (1 - exp(x)) / (1 + exp(x))^3
-}
-
-fish <- function(x, beta) {
-  t(x) %*% diag(as.vector(m.prime(x %*% beta))) %*% x / nrow(x)
-}
-hii <- function(x, beta) {
-  m.prime(x %*% beta) * rowSums(x %*% ginv(nrow(x) * fish(x, beta)) * x)
-}
-phi <- function(y, x, beta, p) {
-  x %*% ginv(fish(x, beta)) * as.vector(y - m(x %*% beta))
-}
+hii <- function(x,beta){m.prime(x%*%beta)*rowSums(x%*%ginv(nrow(x)*fish(x,beta))*x)}
+phi <- function(y,x,beta,p){x%*%ginv(fish(x,beta))*as.vector(y-m(x%*%beta))}
 
 #' Transform point/SE/CI for RD to Fisher-z scale
 #'
@@ -156,9 +152,10 @@ phi <- function(y, x, beta, p) {
 #'   \item{\code{CI}}{Length-2 vector \code{atanh(conf)}.}
 #' }
 #'
-get_estimate <- function(est, se, conf) {
+get_estimate <- function(est,se,conf){
   Ealpha <- atanh(est) #+est*se^2/((1-est^2)^2)
-  Valpha <- se / (1 - est^2)
+  Valpha <- se/(1-est^2)
   CIalpha <- atanh(conf)
   list(point.est = Ealpha, se.est = Valpha, CI = CIalpha)
 }
+

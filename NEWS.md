@@ -1,4 +1,4 @@
-# brm 1.1
+# brmplus 1.1.0
     - Fixed a bug when there is only an intercept term for alpha or beta
 	- Introduced vectorised functions for getProbRR and getProbRD which makes the model fitting 10-100 times faster
 	- Fixed a bug under Linux: matrix objects now also inherit from class "array", namely, e.g., class(diag(1)) is c("matrix", "array") which invalidates code assuming that length(class(obj)) == 1.

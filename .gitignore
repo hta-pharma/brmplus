@@ -1,11 +1,10 @@
-brm_1.1.tar.gz
+brmplus_1.1.0.tar.gz
 ..Rcheck
-brm.Rcheck
+brmplus.Rcheck
 *~
 .Rproj.user
 docker
 rstudio
 *.o
 *.so
-RcppExports.cpp
 .vscode

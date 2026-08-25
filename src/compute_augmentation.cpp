@@ -4,9 +4,6 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-//' @importFrom Rcpp evalCpp
-//' @useDynLib brmplus
-//' @exportPattern ˆ[[:alpha:]]+
 // [[Rcpp::export]]
 arma::vec compute_augmentation_cpp(
   const arma::mat& va,
