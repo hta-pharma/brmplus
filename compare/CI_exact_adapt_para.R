@@ -8,232 +8,237 @@
 ## retained).
 ## -------------------------------------------------------------------------
 .exact_bootstrap_lrt_worker <- function(y.local, state) {
-  tryCatch({
-    check_deadline <- function(stage = "bootstrap_worker") {
-      now <- as.numeric(Sys.time())
-      if (now < state$exact.deadline) return(invisible(NULL))
-      stop(
-        sprintf(
-          "exact() exceeded its %.0f-second time limit at stage '%s' (elapsed %.1f seconds)",
-          state$time.limit.sec,
-          stage,
-          now - state$exact.start.time
-        ),
-        call. = FALSE
-      )
-    }
-
-    diag_zero_worker <- function() {
-      list(
-        nuisance.fits = 0L,
-        profile.steps = 0L,
-        optim.calls = 0L,
-        optim.function.evals = 0L,
-        optimizer.failures = 0L,
-        failed.nuisance.fits = 0L,
-        retried.fits = 0L
-      )
-    }
-
-    diag_add_worker <- function(x, y) {
-      for (nm in names(x)) {
-        x[[nm]] <- x[[nm]] + y[[nm]]
-      }
-      x
-    }
-
-    nll_fun_worker <- function(alpha, beta, yy) {
-      p0p1 <- state$getProb(
-        state$mat_vec_mul(state$va, alpha),
-        state$mat_vec_mul(state$vb, beta)
-      )
-
-      p0 <- p0p1[state$idx0, 1]
-      p1 <- p0p1[state$idx1, 2]
-
-      p0 <- pmin(pmax(p0, state$eps), 1 - state$eps)
-      p1 <- pmin(pmax(p1, state$eps), 1 - state$eps)
-
-      y0.local <- yy[state$idx0]
-      y1.local <- yy[state$idx1]
-
-      -sum((1 - y0.local) * log(1 - p0) * state$w0 +
-             y0.local * log(p0) * state$w0) -
-        sum((1 - y1.local) * log(1 - p1) * state$w1 +
-              y1.local * log(p1) * state$w1)
-    }
-
-    Diff_worker <- function(x1, x0) {
-      sum((x1 - x0)^2) / sum(x1^2 + state$thres)
-    }
-
-    safe_optim_worker <- function(par, fn, bound) {
-      check_deadline("bootstrap_safe_optim_before")
-
-      lower <- rep(-bound, length(par))
-      upper <- rep(bound, length(par))
-
-      fit.raw <- tryCatch(
-        stats::optim(
-          par,
-          fn,
-          method = "L-BFGS-B",
-          lower = lower,
-          upper = upper,
-          control = list(
-            maxit = state$optim.maxit,
-            factr = state$optim.reltol / .Machine$double.eps
-          )
-        ),
-        error = function(e) {
-          if (grepl("time limit", conditionMessage(e), ignore.case = TRUE)) {
-            stop(e)
-          }
-          NULL
+  tryCatch(
+    {
+      check_deadline <- function(stage = "bootstrap_worker") {
+        now <- as.numeric(Sys.time())
+        if (now < state$exact.deadline) {
+          return(invisible(NULL))
         }
-      )
-
-      check_deadline("bootstrap_safe_optim_after")
-
-      fit.was.null <- is.null(fit.raw)
-      nonfinite.par <- !fit.was.null && any(!is.finite(fit.raw$par))
-      fallback.eval <- 0L
-
-      ## Retain the original fallback behavior.  This is not a retry.
-      if (fit.was.null || nonfinite.par) {
-        fallback.value <- fn(par)
-        fallback.eval <- 1L
-        fit <- list(
-          par = par,
-          value = fallback.value,
-          convergence = 99,
-          counts = structure(c(0L, 0L), names = c("function", "gradient"))
+        stop(
+          sprintf(
+            "exact() exceeded its %.0f-second time limit at stage '%s' (elapsed %.1f seconds)",
+            state$time.limit.sec,
+            stage,
+            now - state$exact.start.time
+          ),
+          call. = FALSE
         )
-      } else {
-        fit <- fit.raw
       }
 
-      fn.evals <- 0L
-      if (!is.null(fit.raw) && !is.null(fit.raw$counts)) {
-        if (!is.null(names(fit.raw$counts)) && "function" %in% names(fit.raw$counts)) {
-          fn.evals <- as.integer(fit.raw$counts[["function"]])
-        } else if (length(fit.raw$counts) >= 1L) {
-          fn.evals <- as.integer(fit.raw$counts[[1L]])
-        }
-      }
-      if (is.na(fn.evals)) fn.evals <- 0L
-      fn.evals <- fn.evals + fallback.eval
-
-      convergence.bad <- is.null(fit$convergence) || !identical(as.integer(fit$convergence), 0L)
-      value.bad <- is.null(fit$value) || length(fit$value) != 1L || !is.finite(fit$value)
-
-      list(
-        fit = fit,
-        diagnostics = list(
+      diag_zero_worker <- function() {
+        list(
           nuisance.fits = 0L,
           profile.steps = 0L,
-          optim.calls = 1L,
-          optim.function.evals = fn.evals,
-          optimizer.failures = as.integer(
-            fit.was.null || nonfinite.par || convergence.bad || value.bad
-          ),
+          optim.calls = 0L,
+          optim.function.evals = 0L,
+          optimizer.failures = 0L,
           failed.nuisance.fits = 0L,
           retried.fits = 0L
         )
-      )
-    }
-
-    profile_fit_worker <- function(alphaj, j, yy, alpha.init, beta.init) {
-      alpha <- alpha.init
-      beta <- beta.init
-      alpha[j] <- alphaj
-
-      diff <- state$thres + 1
-      step <- 0L
-      diag <- diag_zero_worker()
-
-      neg.log.likelihood.alpha <- function(alpha.in) {
-        alpha.in[j] <- alphaj
-        nll_fun_worker(alpha.in, beta, yy)
       }
 
-      neg.log.likelihood.beta <- function(beta.in) {
-        nll_fun_worker(alpha, beta.in, yy)
+      diag_add_worker <- function(x, y) {
+        for (nm in names(x)) {
+          x[[nm]] <- x[[nm]] + y[[nm]]
+        }
+        x
       }
 
-      while (diff > state$thres && step < state$max.step) {
-        check_deadline("bootstrap_profile_optimization")
-        step <- step + 1L
+      nll_fun_worker <- function(alpha, beta, yy) {
+        p0p1 <- state$getProb(
+          state$mat_vec_mul(state$va, alpha),
+          state$mat_vec_mul(state$vb, beta)
+        )
 
-        opt1.res <- safe_optim_worker(alpha, neg.log.likelihood.alpha, 8)
-        diag <- diag_add_worker(diag, opt1.res$diagnostics)
-        opt1 <- opt1.res$fit
+        p0 <- p0p1[state$idx0, 1]
+        p1 <- p0p1[state$idx1, 2]
 
-        diff1 <- Diff_worker(opt1$par, alpha)
-        alpha <- opt1$par
+        p0 <- pmin(pmax(p0, state$eps), 1 - state$eps)
+        p1 <- pmin(pmax(p1, state$eps), 1 - state$eps)
+
+        y0.local <- yy[state$idx0]
+        y1.local <- yy[state$idx1]
+
+        -sum((1 - y0.local) * log(1 - p0) * state$w0 +
+          y0.local * log(p0) * state$w0) -
+          sum((1 - y1.local) * log(1 - p1) * state$w1 +
+            y1.local * log(p1) * state$w1)
+      }
+
+      Diff_worker <- function(x1, x0) {
+        sum((x1 - x0)^2) / sum(x1^2 + state$thres)
+      }
+
+      safe_optim_worker <- function(par, fn, bound) {
+        check_deadline("bootstrap_safe_optim_before")
+
+        lower <- rep(-bound, length(par))
+        upper <- rep(bound, length(par))
+
+        fit.raw <- tryCatch(
+          stats::optim(
+            par,
+            fn,
+            method = "L-BFGS-B",
+            lower = lower,
+            upper = upper,
+            control = list(
+              maxit = state$optim.maxit,
+              factr = state$optim.reltol / .Machine$double.eps
+            )
+          ),
+          error = function(e) {
+            if (grepl("time limit", conditionMessage(e), ignore.case = TRUE)) {
+              stop(e)
+            }
+            NULL
+          }
+        )
+
+        check_deadline("bootstrap_safe_optim_after")
+
+        fit.was.null <- is.null(fit.raw)
+        nonfinite.par <- !fit.was.null && any(!is.finite(fit.raw$par))
+        fallback.eval <- 0L
+
+        ## Retain the original fallback behavior.  This is not a retry.
+        if (fit.was.null || nonfinite.par) {
+          fallback.value <- fn(par)
+          fallback.eval <- 1L
+          fit <- list(
+            par = par,
+            value = fallback.value,
+            convergence = 99,
+            counts = structure(c(0L, 0L), names = c("function", "gradient"))
+          )
+        } else {
+          fit <- fit.raw
+        }
+
+        fn.evals <- 0L
+        if (!is.null(fit.raw) && !is.null(fit.raw$counts)) {
+          if (!is.null(names(fit.raw$counts)) && "function" %in% names(fit.raw$counts)) {
+            fn.evals <- as.integer(fit.raw$counts[["function"]])
+          } else if (length(fit.raw$counts) >= 1L) {
+            fn.evals <- as.integer(fit.raw$counts[[1L]])
+          }
+        }
+        if (is.na(fn.evals)) fn.evals <- 0L
+        fn.evals <- fn.evals + fallback.eval
+
+        convergence.bad <- is.null(fit$convergence) || !identical(as.integer(fit$convergence), 0L)
+        value.bad <- is.null(fit$value) || length(fit$value) != 1L || !is.finite(fit$value)
+
+        list(
+          fit = fit,
+          diagnostics = list(
+            nuisance.fits = 0L,
+            profile.steps = 0L,
+            optim.calls = 1L,
+            optim.function.evals = fn.evals,
+            optimizer.failures = as.integer(
+              fit.was.null || nonfinite.par || convergence.bad || value.bad
+            ),
+            failed.nuisance.fits = 0L,
+            retried.fits = 0L
+          )
+        )
+      }
+
+      profile_fit_worker <- function(alphaj, j, yy, alpha.init, beta.init) {
+        alpha <- alpha.init
+        beta <- beta.init
         alpha[j] <- alphaj
 
-        opt2.res <- safe_optim_worker(beta, neg.log.likelihood.beta, 10)
-        diag <- diag_add_worker(diag, opt2.res$diagnostics)
-        opt2 <- opt2.res$fit
+        diff <- state$thres + 1
+        step <- 0L
+        diag <- diag_zero_worker()
 
-        diff2 <- Diff_worker(opt2$par, beta)
-        beta <- opt2$par
+        neg.log.likelihood.alpha <- function(alpha.in) {
+          alpha.in[j] <- alphaj
+          nll_fun_worker(alpha.in, beta, yy)
+        }
 
-        diff <- max(diff1, diff2)
+        neg.log.likelihood.beta <- function(beta.in) {
+          nll_fun_worker(alpha, beta.in, yy)
+        }
+
+        while (diff > state$thres && step < state$max.step) {
+          check_deadline("bootstrap_profile_optimization")
+          step <- step + 1L
+
+          opt1.res <- safe_optim_worker(alpha, neg.log.likelihood.alpha, 8)
+          diag <- diag_add_worker(diag, opt1.res$diagnostics)
+          opt1 <- opt1.res$fit
+
+          diff1 <- Diff_worker(opt1$par, alpha)
+          alpha <- opt1$par
+          alpha[j] <- alphaj
+
+          opt2.res <- safe_optim_worker(beta, neg.log.likelihood.beta, 10)
+          diag <- diag_add_worker(diag, opt2.res$diagnostics)
+          opt2 <- opt2.res$fit
+
+          diff2 <- Diff_worker(opt2$par, beta)
+          beta <- opt2$par
+
+          diff <- max(diff1, diff2)
+        }
+
+        converged <- is.finite(diff) && diff <= state$thres
+        diag$nuisance.fits <- diag$nuisance.fits + 1L
+        diag$profile.steps <- diag$profile.steps + step
+        diag$failed.nuisance.fits <- diag$failed.nuisance.fits + as.integer(!converged)
+
+        list(
+          value = nll_fun_worker(alpha, beta, yy),
+          alpha = alpha,
+          beta = beta,
+          converged = converged,
+          profile.steps = step,
+          diagnostics = diag
+        )
       }
 
-      converged <- is.finite(diff) && diff <= state$thres
-      diag$nuisance.fits <- diag$nuisance.fits + 1L
-      diag$profile.steps <- diag$profile.steps + step
-      diag$failed.nuisance.fits <- diag$failed.nuisance.fits + as.integer(!converged)
+      ## Bootstrap null fit: start from the observed-data null constrained fit.
+      null.fit <- profile_fit_worker(
+        state$alpha.ml[state$j],
+        state$j,
+        y.local,
+        alpha.init = state$alpha.null.start,
+        beta.init = state$beta.null.start
+      )
+
+      ## Bootstrap alternative fit: use the same original-input start as the
+      ## bootstrap null fit.
+      alt.fit <- profile_fit_worker(
+        state$alphaj,
+        state$j,
+        y.local,
+        alpha.init = state$alpha.null.start,
+        beta.init = state$beta.null.start
+      )
+
+      diag <- diag_add_worker(null.fit$diagnostics, alt.fit$diagnostics)
+      value <- 2 * (alt.fit$value - null.fit$value)
 
       list(
-        value = nll_fun_worker(alpha, beta, yy),
-        alpha = alpha,
-        beta = beta,
-        converged = converged,
-        profile.steps = step,
-        diagnostics = diag
+        ok = TRUE,
+        value = value,
+        diagnostics = diag,
+        message = NA_character_
+      )
+    },
+    error = function(e) {
+      list(
+        ok = FALSE,
+        value = NA_real_,
+        diagnostics = NULL,
+        message = conditionMessage(e)
       )
     }
-
-    ## Bootstrap null fit: start from the observed-data null constrained fit.
-    null.fit <- profile_fit_worker(
-      state$alpha.ml[state$j],
-      state$j,
-      y.local,
-      alpha.init = state$alpha.null.start,
-      beta.init = state$beta.null.start
-    )
-
-    ## Bootstrap alternative fit: use the same original-input start as the
-    ## bootstrap null fit.
-    alt.fit <- profile_fit_worker(
-      state$alphaj,
-      state$j,
-      y.local,
-      alpha.init = state$alpha.null.start,
-      beta.init = state$beta.null.start
-    )
-
-    diag <- diag_add_worker(null.fit$diagnostics, alt.fit$diagnostics)
-    value <- 2 * (alt.fit$value - null.fit$value)
-
-    list(
-      ok = TRUE,
-      value = value,
-      diagnostics = diag,
-      message = NA_character_
-    )
-  }, error = function(e) {
-    list(
-      ok = FALSE,
-      value = NA_real_,
-      diagnostics = NULL,
-      message = conditionMessage(e)
-    )
-  })
+  )
 }
 
 exact <- function(param, y, x, va, vb, weight = NULL,
@@ -298,7 +303,9 @@ exact <- function(param, y, x, va, vb, weight = NULL,
 
   check_exact_deadline <- function(stage = "unknown") {
     now <- as.numeric(Sys.time())
-    if (now < exact.deadline) return(invisible(NULL))
+    if (now < exact.deadline) {
+      return(invisible(NULL))
+    }
 
     timeout.condition <- structure(
       list(
@@ -330,9 +337,12 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   bootstrap.cl <- NULL
   if (parallel.backend == "psock") {
     bootstrap.cl <- parallel::makeCluster(ncores.bootstrap)
-    on.exit({
-      try(parallel::stopCluster(bootstrap.cl), silent = TRUE)
-    }, add = TRUE)
+    on.exit(
+      {
+        try(parallel::stopCluster(bootstrap.cl), silent = TRUE)
+      },
+      add = TRUE
+    )
 
     ## If mat_vec_mul() is provided by a package/Rcpp DLL, load that package
     ## on each clean PSOCK worker before exporting the wrapper.  The package
@@ -511,7 +521,9 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   ## Convert worker diagnostics to the full master diagnostic shape.
   expand_worker_diag <- function(d) {
     out <- diag_zero()
-    if (is.null(d)) return(out)
+    if (is.null(d)) {
+      return(out)
+    }
     for (nm in intersect(names(d), names(out))) {
       out[[nm]] <- d[[nm]]
     }
@@ -537,9 +549,9 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     y1.local <- y.local[idx1]
 
     -sum((1 - y0.local) * log(1 - p0) * w0 +
-           y0.local * log(p0) * w0) -
+      y0.local * log(p0) * w0) -
       sum((1 - y1.local) * log(1 - p1) * w1 +
-            y1.local * log(p1) * w1)
+        y1.local * log(p1) * w1)
   }
 
   Diff <- function(x1, x0) {
@@ -567,7 +579,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
         ## Do not swallow elapsed-time errors.  Ordinary optimization failures
         ## retain the original fallback below; there is deliberately no retry.
         if (inherits(e, "exact_timeout") ||
-            grepl("time limit", conditionMessage(e), ignore.case = TRUE)) {
+          grepl("time limit", conditionMessage(e), ignore.case = TRUE)) {
           stop(e)
         }
         NULL
@@ -901,7 +913,9 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     }
 
     find_exact_candidate <- function(a) {
-      if (!length(candidate.values)) return(NA_integer_)
+      if (!length(candidate.values)) {
+        return(NA_integer_)
+      }
       d <- abs(candidate.values - a)
       k <- which.min(d)
       if (length(k) && d[k] <= cache_tol(a)) k else NA_integer_
@@ -1074,7 +1088,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
 
     ## Stop once width <= thres.dicho.local or after max.bisection steps.
     while (abs(inner - outer) > thres.dicho.local &&
-           step < max.bisection) {
+      step < max.bisection) {
       check_exact_deadline("dichotomy")
 
       step <- step + 1L
@@ -1237,52 +1251,60 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     ),
     observed.null = lapply(
       seq_len(pa),
-      function(j) list(
-        j = j,
-        value = null.fit.obs[[j]]$value,
-        converged = null.fit.obs[[j]]$converged,
-        diagnostics = null.fit.diag[[j]]
-      )
+      function(j) {
+        list(
+          j = j,
+          value = null.fit.obs[[j]]$value,
+          converged = null.fit.obs[[j]]$converged,
+          diagnostics = null.fit.diag[[j]]
+        )
+      }
     ),
     upper = lapply(
       seq_len(pa),
-      function(j) list(
-        j = j,
-        endpoint = up.res[[j]]$alpha.dicho,
-        convergence = up.res[[j]]$convergence,
-        reason = up.res[[j]]$reason,
-        bracket = up.res[[j]]$bracket,
-        final.bracket.width = if (is.null(up.res[[j]]$bracket)) {
-          NA_real_
-        } else {
-          abs(diff(up.res[[j]]$bracket))
-        },
-        diagnostics = up.res[[j]]$diagnostics
-      )
+      function(j) {
+        list(
+          j = j,
+          endpoint = up.res[[j]]$alpha.dicho,
+          convergence = up.res[[j]]$convergence,
+          reason = up.res[[j]]$reason,
+          bracket = up.res[[j]]$bracket,
+          final.bracket.width = if (is.null(up.res[[j]]$bracket)) {
+            NA_real_
+          } else {
+            abs(diff(up.res[[j]]$bracket))
+          },
+          diagnostics = up.res[[j]]$diagnostics
+        )
+      }
     ),
     lower = lapply(
       seq_len(pa),
-      function(j) list(
-        j = j,
-        endpoint = low.res[[j]]$alpha.dicho,
-        convergence = low.res[[j]]$convergence,
-        reason = low.res[[j]]$reason,
-        bracket = low.res[[j]]$bracket,
-        final.bracket.width = if (is.null(low.res[[j]]$bracket)) {
-          NA_real_
-        } else {
-          abs(diff(low.res[[j]]$bracket))
-        },
-        diagnostics = low.res[[j]]$diagnostics
-      )
+      function(j) {
+        list(
+          j = j,
+          endpoint = low.res[[j]]$alpha.dicho,
+          convergence = low.res[[j]]$convergence,
+          reason = low.res[[j]]$reason,
+          bracket = low.res[[j]]$bracket,
+          final.bracket.width = if (is.null(low.res[[j]]$bracket)) {
+            NA_real_
+          } else {
+            abs(diff(low.res[[j]]$bracket))
+          },
+          diagnostics = low.res[[j]]$diagnostics
+        )
+      }
     ),
     p.value = lapply(
       seq_len(pa),
-      function(j) list(
-        j = j,
-        p = p.value[j],
-        diagnostics = p.diag[[j]]
-      )
+      function(j) {
+        list(
+          j = j,
+          p = p.value[j],
+          diagnostics = p.diag[[j]]
+        )
+      }
     ),
     total = total.diag,
     elapsed.sec = as.numeric(Sys.time()) - exact.start.time

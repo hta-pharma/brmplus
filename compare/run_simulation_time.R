@@ -23,15 +23,15 @@ mat_vec_mul <- getFromNamespace("mat_vec_mul", "brmplus")
 compute_augmentation_cpp <- getFromNamespace("compute_augmentation_cpp", "brmplus")
 
 ## ------------------------- user settings -------------------------
-param <- "RR"                 # "RR" or "RD"
-event <- "common"             # "common" or "rare"
-hypothesis <- "alternative"   # "null" or "alternative"
+param <- "RR" # "RR" or "RD"
+event <- "common" # "common" or "rare"
+hypothesis <- "alternative" # "null" or "alternative"
 n <- 50
 ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1"))
 result_dir <- file.path("results", "time")
 exact_seed_offset <- 1000000L
-exact_parallel <- FALSE         # TRUE: parallelize bootstrap LRTs inside exact()
-exact_ncores <- 1L              # inner exact() workers; requires ncores = 1
+exact_parallel <- FALSE # TRUE: parallelize bootstrap LRTs inside exact()
+exact_ncores <- 1L # inner exact() workers; requires ncores = 1
 
 argv <- commandArgs(trailingOnly = TRUE)
 if (length(argv)) for (a in argv) eval(parse(text = a))
@@ -65,10 +65,12 @@ if (exact_parallel && !is.na(allocated) && exact_ncores > allocated) {
 }
 
 source_all <- function() {
-  files <- c("getProbScalarRR.R", "getProbScalarRD.R", "1_CallMLE.R",
-             "1.1_MLE_Point.R", "MLE_Point_Firth_for_RR.R",
-             "MLE_Point_Firth_for_RD.R", "1.2_MLE_Var.R", "bayes_p.R",
-             "MyFunc.R", "CI_exact_adapt_para.R", "data_generation_simulation.R")
+  files <- c(
+    "getProbScalarRR.R", "getProbScalarRD.R", "1_CallMLE.R",
+    "1.1_MLE_Point.R", "MLE_Point_Firth_for_RR.R",
+    "MLE_Point_Firth_for_RD.R", "1.2_MLE_Var.R", "bayes_p.R",
+    "MyFunc.R", "CI_exact_adapt_para.R", "data_generation_simulation.R"
+  )
   for (f in files) source(f)
   invisible(NULL)
 }
@@ -87,8 +89,10 @@ timed <- function(expr) {
   if (success && is.numeric(val)) {
     success <- length(val) > 0L && is.finite(val[[1L]])
   }
-  list(value = val, elapsed = proc.time()[["elapsed"]] - t0,
-       error = err, success = success)
+  list(
+    value = val, elapsed = proc.time()[["elapsed"]] - t0,
+    error = err, success = success
+  )
 }
 
 exact_safe <- function(...) {
@@ -97,7 +101,9 @@ exact_safe <- function(...) {
 }
 
 pack_exact_result <- function(fit, ci) {
-  if (is.null(fit) || is.null(ci)) return(NULL)
+  if (is.null(fit) || is.null(ci)) {
+    return(NULL)
+  }
   c(
     estimate = fit$point.est[1],
     se = fit$se.est[1],
@@ -195,17 +201,25 @@ mn_fit <- function(N11, Na1, N01, Na0) {
 ## Each GC variant is run independently so its reported time is a complete,
 ## directly comparable method time rather than an incremental shared time.
 gc_fit <- function(dat, param, variant) {
-  y <- dat$y; x <- dat$x; v2 <- dat$v.2; n <- length(y)
-  Y1 <- y[x == 1]; Y0 <- y[x == 0]
-  V21 <- v2[x == 1]; V20 <- v2[x == 0]
-  d1 <- data.frame(Y1, V21); d0 <- data.frame(Y0, V20)
-  X1 <- cbind(1, V21); X0 <- cbind(1, V20)
+  y <- dat$y
+  x <- dat$x
+  v2 <- dat$v.2
+  n <- length(y)
+  Y1 <- y[x == 1]
+  Y0 <- y[x == 0]
+  V21 <- v2[x == 1]
+  V20 <- v2[x == 0]
+  d1 <- data.frame(Y1, V21)
+  d0 <- data.frame(Y0, V20)
+  X1 <- cbind(1, V21)
+  X0 <- cbind(1, V20)
   Xall <- cbind(1, v2)
 
   if (variant %in% c("GC", "GC-BR")) {
     f1 <- glm(Y1 ~ V21, family = binomial, data = d1)
     f0 <- glm(Y0 ~ V20, family = binomial, data = d0)
-    b1 <- coef(f1); b0 <- coef(f0)
+    b1 <- coef(f1)
+    b0 <- coef(f0)
     if (variant == "GC-BR") {
       b1 <- b1 + colMeans(hatvalues(f1) * phi(Y1, X1, b1, mean(x == 1)))
       b0 <- b0 + colMeans(hatvalues(f0) * phi(Y0, X0, b0, mean(x == 0)))
@@ -213,14 +227,15 @@ gc_fit <- function(dat, param, variant) {
   } else {
     f1 <- logistf(Y1 ~ V21, data = d1)
     f0 <- logistf(Y0 ~ V20, data = d0)
-    b1 <- f1$coefficients; b0 <- f0$coefficients
+    b1 <- f1$coefficients
+    b0 <- f0$coefficients
     if (variant == "GC-FC-BR1") {
       b1 <- b1 + colMeans(as.vector(hii(X1, b1)) *
         (phi(Y1, X1, b1, mean(x == 1)) -
-         (X1 * as.vector(1 - 2 * m(X1 %*% b1))) %*% t(ginv(fish(X1, b1))) / 2))
+          (X1 * as.vector(1 - 2 * m(X1 %*% b1))) %*% t(ginv(fish(X1, b1))) / 2))
       b0 <- b0 + colMeans(as.vector(hii(X0, b0)) *
         (phi(Y0, X0, b0, mean(x == 0)) -
-         (X0 * as.vector(1 - 2 * m(X0 %*% b0))) %*% t(ginv(fish(X0, b0))) / 2))
+          (X0 * as.vector(1 - 2 * m(X0 %*% b0))) %*% t(ginv(fish(X0, b0))) / 2))
     } else if (variant == "GC-FC-BR2") {
       b1 <- b1 - colMeans(as.vector(hii(X1, b1)) *
         ((X1 * as.vector(1 - 2 * m(X1 %*% b1))) %*% t(ginv(fish(X1, b1))) / 2))
@@ -270,15 +285,27 @@ gc_fit <- function(dat, param, variant) {
 
 truth <- function(param, event, hypothesis) {
   if (param == "RR") {
-    if (event == "common" && hypothesis == "null") return(list(a=0, b=c(1.5,.6), g=c(0,0)))
-    if (event == "common") return(list(a=.3, b=c(1.65,.5), g=c(0,0)))
-    if (hypothesis == "null") return(list(a=0, b=c(-4.7,.5), g=c(0,0)))
-    return(list(a=.7, b=c(-5.5,.5), g=c(0,0)))
+    if (event == "common" && hypothesis == "null") {
+      return(list(a = 0, b = c(1.5, .6), g = c(0, 0)))
+    }
+    if (event == "common") {
+      return(list(a = .3, b = c(1.65, .5), g = c(0, 0)))
+    }
+    if (hypothesis == "null") {
+      return(list(a = 0, b = c(-4.7, .5), g = c(0, 0)))
+    }
+    return(list(a = .7, b = c(-5.5, .5), g = c(0, 0)))
   }
-  if (event == "common" && hypothesis == "null") return(list(a=0, b=c(.9,.5), g=c(0,0)))
-  if (event == "common") return(list(a=.1, b=c(.9,.2), g=c(0,0)))
-  if (hypothesis == "null") return(list(a=0, b=c(-4.5,.5), g=c(0,0)))
-  list(a=.05, b=c(-5.5,.2), g=c(0,0))
+  if (event == "common" && hypothesis == "null") {
+    return(list(a = 0, b = c(.9, .5), g = c(0, 0)))
+  }
+  if (event == "common") {
+    return(list(a = .1, b = c(.9, .2), g = c(0, 0)))
+  }
+  if (hypothesis == "null") {
+    return(list(a = 0, b = c(-4.5, .5), g = c(0, 0)))
+  }
+  list(a = .05, b = c(-5.5, .2), g = c(0, 0))
 }
 
 one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
@@ -287,14 +314,24 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
   tr <- truth(param, event, hypothesis)
   dg <- data.generation(param, n, tr$a, tr$b, tr$g)
   dat <- dg$data
-  y <- dat$y; x <- dat$x
+  y <- dat$y
+  x <- dat$x
   va <- as.matrix(dat$v.1, ncol = 1)
   vb <- cbind(dat$v.1, dat$v.2)
-  Na0 <- dg$count[1]; Na1 <- dg$count[2]; N01 <- dg$count[3]; N11 <- dg$count[4]
-  P0 <- N01 / Na0; P1 <- N11 / Na1
-  pa <- length(tr$a); pb <- length(tr$b); w <- rep(1, length(y))
-  max.step <- min(pa * 20, 1000); thres <- 1e-6
-  tm <- numeric(); er <- character(); ok <- logical()
+  Na0 <- dg$count[1]
+  Na1 <- dg$count[2]
+  N01 <- dg$count[3]
+  N11 <- dg$count[4]
+  P0 <- N01 / Na0
+  P1 <- N11 / Na1
+  pa <- length(tr$a)
+  pb <- length(tr$b)
+  w <- rep(1, length(y))
+  max.step <- min(pa * 20, 1000)
+  thres <- 1e-6
+  tm <- numeric()
+  er <- character()
+  ok <- logical()
   save_time <- function(name, z, add = 0) {
     tm[name] <<- z$elapsed + add
     er[name] <<- z$error
@@ -302,13 +339,13 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
   }
 
   ## BRM and its boundary version
-  z_brm <- timed(MLEst(param, y,x,va,vb,w,max.step,thres,rep(0,pa),rep(0,pb),pa,pb))
+  z_brm <- timed(MLEst(param, y, x, va, vb, w, max.step, thres, rep(0, pa), rep(0, pb), pa, pb))
   save_time("brm", z_brm)
   fit_b <- z_brm$value
   z_bad <- timed({
     ans <- fit_b
-    if (P0 %in% c(0,1) || P1 %in% c(0,1)) {
-      by <- if (param == "RR") bayes_est_RR(Na0,Na1,N01,N11) else bayes_est_RD(Na0,Na1,N01,N11)
+    if (P0 %in% c(0, 1) || P1 %in% c(0, 1)) {
+      by <- if (param == "RR") bayes_est_RR(Na0, Na1, N01, N11) else bayes_est_RD(Na0, Na1, N01, N11)
       ans$point.est[1] <- by$point.est
       ans$se.est[1] <- by$se.est
       ans$conf.lower[1] <- by$conf.lower
@@ -322,13 +359,13 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
   fit_bad <- z_bad$value
 
   ## BRM Firth and boundary-adjusted BRM Firth
-  z_fc <- timed(MLEst(param,y,x,va,vb,w,max.step,thres,rep(0,pa),rep(0,pb),pa,pb,method="firth"))
+  z_fc <- timed(MLEst(param, y, x, va, vb, w, max.step, thres, rep(0, pa), rep(0, pb), pa, pb, method = "firth"))
   save_time("brm-FC", z_fc)
   fit_fc <- z_fc$value
   z_fcad <- timed({
     ans <- fit_fc
-    if (P0 %in% c(0,1) || P1 %in% c(0,1)) {
-      by <- if (param == "RR") bayes_est_RR(Na0,Na1,N01,N11) else bayes_est_RD(Na0,Na1,N01,N11)
+    if (P0 %in% c(0, 1) || P1 %in% c(0, 1)) {
+      by <- if (param == "RR") bayes_est_RR(Na0, Na1, N01, N11) else bayes_est_RD(Na0, Na1, N01, N11)
       ans$point.est[1] <- by$point.est
       ans$se.est[1] <- by$se.est
       ans$conf.lower[1] <- by$conf.lower
@@ -342,38 +379,50 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
 
   ## Exact/BC timings include their required point-estimator fit.
   set.seed(seed + exact_seed_offset)
-  z_bc <- timed(if (is.null(fit_b)) NULL else {
-    ci <- exact_safe(param,y,x,va,vb,w,max.step,thres,1e-2,
-                     fit_b$point.est,fit_b$se.est,pa,pb,
-                     parallel.bootstrap = exact_parallel,
-                     ncores.bootstrap = exact_ncores)
+  z_bc <- timed(if (is.null(fit_b)) {
+    NULL
+  } else {
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+      fit_b$point.est, fit_b$se.est, pa, pb,
+      parallel.bootstrap = exact_parallel,
+      ncores.bootstrap = exact_ncores
+    )
     pack_exact_result(fit_b, ci)
   })
   save_time("brm-BC", z_bc, z_brm$elapsed)
   set.seed(seed + exact_seed_offset + 1L)
-  z_bbc <- timed(if (is.null(fit_bad)) NULL else {
-    ci <- exact_safe(param,y,x,va,vb,w,max.step,thres,1e-2,
-                     fit_bad$point.est,fit_bad$se.est,pa,pb,
-                     parallel.bootstrap = exact_parallel,
-                     ncores.bootstrap = exact_ncores)
+  z_bbc <- timed(if (is.null(fit_bad)) {
+    NULL
+  } else {
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+      fit_bad$point.est, fit_bad$se.est, pa, pb,
+      parallel.bootstrap = exact_parallel,
+      ncores.bootstrap = exact_ncores
+    )
     pack_exact_result(fit_bad, ci)
   })
   save_time("brm_b-BC", z_bbc, z_brm$elapsed + z_bad$elapsed)
   set.seed(seed + exact_seed_offset + 10L)
-  z_fcbc <- timed(if (is.null(fit_fc)) NULL else {
-    ci <- exact_safe(param,y,x,va,vb,w,max.step,thres,1e-2,
-                     fit_fc$point.est,fit_fc$se.est,pa,pb,
-                     parallel.bootstrap = exact_parallel,
-                     ncores.bootstrap = exact_ncores)
+  z_fcbc <- timed(if (is.null(fit_fc)) {
+    NULL
+  } else {
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+      fit_fc$point.est, fit_fc$se.est, pa, pb,
+      parallel.bootstrap = exact_parallel,
+      ncores.bootstrap = exact_ncores
+    )
     pack_exact_result(fit_fc, ci)
   })
   save_time("brm-FC-BC", z_fcbc, z_fc$elapsed)
   set.seed(seed + exact_seed_offset + 11L)
-  z_fcadbc <- timed(if (is.null(z_fcad$value)) NULL else {
-    ci <- exact_safe(param,y,x,va,vb,w,max.step,thres,1e-2,
-                     z_fcad$value$point.est,z_fcad$value$se.est,pa,pb,
-                     parallel.bootstrap = exact_parallel,
-                     ncores.bootstrap = exact_ncores)
+  z_fcadbc <- timed(if (is.null(z_fcad$value)) {
+    NULL
+  } else {
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+      z_fcad$value$point.est, z_fcad$value$se.est, pa, pb,
+      parallel.bootstrap = exact_parallel,
+      ncores.bootstrap = exact_ncores
+    )
     pack_exact_result(z_fcad$value, ci)
   })
   save_time("brm-FC_b-BC", z_fcadbc, z_fc$elapsed + z_fcad$elapsed)
@@ -386,29 +435,39 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     save_time("LB", z)
     z <- timed(rr_glm_fit(dat, "poisson"))
     save_time("LP", z)
-    z <- timed(quasi.poisson(dat)); save_time("RLP", z)
-    z <- timed(firth_logbin_try(dat)); save_time("LB-FC", z)
-    z <- timed(firth_logpois(dat)); save_time("LP-FC", z)
-    z <- timed(firth_robust_logpois(dat)); save_time("RLP-FC", z)
+    z <- timed(quasi.poisson(dat))
+    save_time("RLP", z)
+    z <- timed(firth_logbin_try(dat))
+    save_time("LB-FC", z)
+    z <- timed(firth_logpois(dat))
+    save_time("LP-FC", z)
+    z <- timed(firth_robust_logpois(dat))
+    save_time("RLP-FC", z)
   } else {
     z <- timed(rd_glm_fit(dat))
     save_time("GLM", z)
     z <- timed(rd_lpm_fit(dat))
     save_time("LPM", z)
-    z <- timed(mn_fit(N11, Na1, N01, Na0)); save_time("MN", z)
+    z <- timed(mn_fit(N11, Na1, N01, Na0))
+    save_time("MN", z)
   }
 
-  for (g in c("GC","GC-BR","GC-FC","GC-FC-BR1","GC-FC-BR2")) {
-    z <- timed(gc_fit(dat, param, g)); save_time(g, z)
+  for (g in c("GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2")) {
+    z <- timed(gc_fit(dat, param, g))
+    save_time(g, z)
   }
 
   wanted <- if (param == "RR") {
-    c("CMH","LB","LP","RLP","LB-FC","LP-FC","RLP-FC","brm","brm-BC",
-      "brm-FC","brm-FC_b","brm-FC-BC","brm_b","brm_b-BC","brm-FC_b-BC",
-      "GC","GC-BR","GC-FC","GC-FC-BR1","GC-FC-BR2")
+    c(
+      "CMH", "LB", "LP", "RLP", "LB-FC", "LP-FC", "RLP-FC", "brm", "brm-BC",
+      "brm-FC", "brm-FC_b", "brm-FC-BC", "brm_b", "brm_b-BC", "brm-FC_b-BC",
+      "GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2"
+    )
   } else {
-    c("GLM","LPM","MN","brm","brm-BC","brm-FC","brm-FC_b","brm-FC-BC","brm_b",
-      "brm_b-BC","brm-FC_b-BC","GC","GC-BR","GC-FC","GC-FC-BR1","GC-FC-BR2")
+    c(
+      "GLM", "LPM", "MN", "brm", "brm-BC", "brm-FC", "brm-FC_b", "brm-FC-BC", "brm_b",
+      "brm_b-BC", "brm-FC_b-BC", "GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2"
+    )
   }
   list(time = tm[wanted], success = ok[wanted], error = er[wanted])
 }
@@ -491,20 +550,20 @@ successful_time[!success_mat] <- NA_real_
 col_stat <- function(x, fun) if (any(is.finite(x))) fun(x[is.finite(x)]) else NA_real_
 summary_df <- data.frame(
   method = colnames(time_mat),
-  mean_seconds = apply(successful_time,2,col_stat,fun=mean),
-  median_seconds = apply(successful_time,2,col_stat,fun=median),
-  sd_seconds = apply(successful_time,2,col_stat,fun=sd),
-  min_seconds = apply(successful_time,2,col_stat,fun=min),
-  max_seconds = apply(successful_time,2,col_stat,fun=max),
-  mean_attempt_seconds = apply(time_mat,2,mean,na.rm=TRUE),
+  mean_seconds = apply(successful_time, 2, col_stat, fun = mean),
+  median_seconds = apply(successful_time, 2, col_stat, fun = median),
+  sd_seconds = apply(successful_time, 2, col_stat, fun = sd),
+  min_seconds = apply(successful_time, 2, col_stat, fun = min),
+  max_seconds = apply(successful_time, 2, col_stat, fun = max),
+  mean_attempt_seconds = apply(time_mat, 2, mean, na.rm = TRUE),
   n_timed = colSums(is.finite(time_mat)),
-  n_success = colSums(success_mat, na.rm=TRUE),
+  n_success = colSums(success_mat, na.rm = TRUE),
   row.names = NULL, check.names = FALSE
 )
 
 dir.create(result_dir, recursive = TRUE, showWarnings = FALSE)
-tag <- paste(param,event,hypothesis,paste0("n",n),paste0("R",R),sep="_")
-write.csv(time_df,file.path(result_dir,paste0("para_time_raw_",tag,".csv")),row.names=FALSE)
-write.csv(success_df,file.path(result_dir,paste0("para_time_success_",tag,".csv")),row.names=FALSE)
-write.csv(summary_df,file.path(result_dir,paste0("para_time_summary_",tag,".csv")),row.names=FALSE)
+tag <- paste(param, event, hypothesis, paste0("n", n), paste0("R", R), sep = "_")
+write.csv(time_df, file.path(result_dir, paste0("para_time_raw_", tag, ".csv")), row.names = FALSE)
+write.csv(success_df, file.path(result_dir, paste0("para_time_success_", tag, ".csv")), row.names = FALSE)
+write.csv(summary_df, file.path(result_dir, paste0("para_time_summary_", tag, ".csv")), row.names = FALSE)
 print(summary_df)

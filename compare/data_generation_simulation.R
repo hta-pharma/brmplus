@@ -60,7 +60,7 @@ data.generation <- function(param, n, alpha.true, beta.true, gamma.true) {
 #'
 #' @details
 #' The robust variance uses \code{vcovHC(fit, type="HC0")}. This can be viewed as
-#' a log–Poisson working model with overdispersion and sandwich SEs.
+#' a log<U+2013>Poisson working model with overdispersion and sandwich SEs.
 
 
 quasi.poisson <- function(data) {
@@ -81,11 +81,17 @@ firth_logbin_try <- function(dat, start = rep(-0.01, 3), eps = 1e-6,
                              maxit = 5000, quiet = TRUE) {
   out_na <- function() setNames(rep(NA_real_, 5), c("est", "se", "lcl", "ucl", "p"))
   need <- c("y", "x", "v.1", "v.2")
-  if (!all(need %in% names(dat))) return(out_na())
+  if (!all(need %in% names(dat))) {
+    return(out_na())
+  }
   dd <- dat[, need]
   dd <- dd[stats::complete.cases(dd), , drop = FALSE]
-  if (nrow(dd) == 0) return(out_na())
-  for (nm in need) if (any(!is.finite(dd[[nm]]))) return(out_na())
+  if (nrow(dd) == 0) {
+    return(out_na())
+  }
+  for (nm in need) if (any(!is.finite(dd[[nm]]))) {
+    return(out_na())
+  }
 
   fit <- tryCatch(
     suppressWarnings(glm(y ~ x + v.1 + v.2 - 1,
@@ -98,14 +104,20 @@ firth_logbin_try <- function(dat, start = rep(-0.01, 3), eps = 1e-6,
       NULL
     }
   )
-  if (is.null(fit)) return(out_na())
+  if (is.null(fit)) {
+    return(out_na())
+  }
 
   est <- tryCatch(unname(coef(fit)[["x"]]), error = function(e) NA_real_)
   V <- tryCatch(vcov(fit), error = function(e) NULL)
   se <- if (!is.null(V) && "x" %in% rownames(V) && "x" %in% colnames(V)) {
     sqrt(unname(V["x", "x"]))
-  } else NA_real_
-  if (!is.finite(est) || !is.finite(se) || se <= 0) return(out_na())
+  } else {
+    NA_real_
+  }
+  if (!is.finite(est) || !is.finite(se) || se <= 0) {
+    return(out_na())
+  }
 
   p <- 2 * (1 - pnorm(abs(est / se)))
   ci <- est + c(-1.96, 1.96) * se
@@ -146,7 +158,7 @@ firth_robust_logpois <- function(dat) {
 #' and p-values for a suite of methods: BRM MLE,
 #' CMH, log-binomial, log-Poisson, robust log-Poisson (quasi-Poisson + HC0),
 #' Firth-corrected log-binomial/log-Poisson/robust log-Poisson, and several
-#' g-computation variants. Returns a 5×13 matrix:
+#' g-computation variants. Returns a 5<U+00D7>13 matrix:
 #' rows = \code{point.est}, \code{se.est}, \code{con.lower}, \code{con.upper}, \code{p.value};
 #' columns labeled by method.
 #'
@@ -409,8 +421,8 @@ simulate.rr <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 #' Generates data under an RD parametrization and computes estimates, SEs, CIs,
 #' and p-values for multiple methods: BRM MLE,
 #' Bayesian RD with simple conjugate prior, GLM with identity link (if feasible),
-#' LPM with robust SEs, Miettinen–Nurminen (MN), and g-computation variants
-#' (plain, BR, FC and BR1/BR2). Returns a 5×10 matrix with
+#' LPM with robust SEs, Miettinen<U+2013>Nurminen (MN), and g-computation variants
+#' (plain, BR, FC and BR1/BR2). Returns a 5<U+00D7>10 matrix with
 #' rows \code{point.est}, \code{se.est}, \code{CI.low.or}, \code{CI.up.or}, \code{p.value}.
 #'
 #' @param n Integer. Sample size.
@@ -507,12 +519,12 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
   e.lpm <- coeftest(lpm, vcov = vcovHC(lpm, type = "HC3"))
   # est.lpm <- get_estimate(e.lpm[1,1],e.lpm[1,2],as.numeric(c(e.lpm[1,1]-1.96*e.lpm[1,2],e.lpm[1,1]+1.96*e.lpm[1,2])))
 
-  ## Miettinen–Nurminen
+  ## Miettinen<U+2013>Nurminen
   est.MN.point <- P1 - P0
   est.MN.CI <- diffscoreci(N1_1, Na1, N0_1, Na0, conf.level = 0.95)
   est.MN.se <- (est.MN.CI$conf.int[2] - est.MN.CI$conf.int[1]) / (2 * qnorm(0.975))
   stat.MN <- PropCIs:::z2stat(P1, Na1, P0, Na0, dif = 0)
-  p.MN <- pchisq(stat.MN, df = 1, lower.tail = FALSE) 
+  p.MN <- pchisq(stat.MN, df = 1, lower.tail = FALSE)
 
 
   ## g-computaion & g-computation_BR
@@ -596,16 +608,18 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
 
   alpha.point <- function(rd) atanh(rd)
-  alpha.se <- function(rd, se) { 
-    se / (1 - rd^2)}
+  alpha.se <- function(rd, se) {
+    se / (1 - rd^2)
+  }
   alpha.ci <- function(low, up) {
-    c(atanh(low), atanh(up))}
+    c(atanh(low), atanh(up))
+  }
   rd.wald <- function(est, se) {
-  c(est - qnorm(0.975) * se, est + qnorm(0.975) * se)
+    c(est - qnorm(0.975) * se, est + qnorm(0.975) * se)
   }
   rd.pvalue <- function(est, se) {
     2 * min(pnorm(est / se), 1 - pnorm(est / se))
-  } 
+  }
   ### result
   point.est <- c(
     est.brm.or$point.est[1],
@@ -629,7 +643,8 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
     alpha.se(alpha.hat.star, se.hat.star),
     alpha.se(alpha.tilde, se.tilde),
     alpha.se(alpha.tilde.star, se.tilde.star),
-    alpha.se(alpha.tilde.doustar, se.tilde.doustar)) 
+    alpha.se(alpha.tilde.doustar, se.tilde.doustar)
+  )
   CI.low.or <- c(
     est.brm.or$conf.lower[1],
     est.bayes$conf.lower,
@@ -640,7 +655,8 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
     atanh(rd.wald(alpha.hat.star, se.hat.star)[1]),
     atanh(rd.wald(alpha.tilde, se.tilde)[1]),
     atanh(rd.wald(alpha.tilde.star, se.tilde.star)[1]),
-    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[1]))
+    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[1])
+  )
 
   CI.up.or <- c(
     est.brm.or$conf.upper[1],
@@ -652,7 +668,8 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
     atanh(rd.wald(alpha.hat.star, se.hat.star)[2]),
     atanh(rd.wald(alpha.tilde, se.tilde)[2]),
     atanh(rd.wald(alpha.tilde.star, se.tilde.star)[2]),
-    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[2]) )
+    atanh(rd.wald(alpha.tilde.doustar, se.tilde.doustar)[2])
+  )
   p.value <- c(
     est.brm.or$p.value[1],
     est.bayes$p.value,
