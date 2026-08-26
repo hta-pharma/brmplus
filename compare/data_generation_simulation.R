@@ -89,8 +89,10 @@ firth_logbin_try <- function(dat, start = rep(-0.01, 3), eps = 1e-6,
   if (nrow(dd) == 0) {
     return(out_na())
   }
-  for (nm in need) if (any(!is.finite(dd[[nm]]))) {
-    return(out_na())
+  for (nm in need) {
+    if (any(!is.finite(dd[[nm]]))) {
+      return(out_na())
+    }
   }
 
   fit <- tryCatch(

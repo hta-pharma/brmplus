@@ -80,7 +80,6 @@ hyp_vec <- hypothesis
 event_vec <- event
 
 
-
 ## =========================
 ## 1) Truth-setting helper
 ## =========================
@@ -583,8 +582,6 @@ run_scenario <- function(param, n, event, hypothesis, R,
   ## <U+036C><U+02B1><U+FFFD><U+FFFD><U+FFFD><U+0638><U+FFFD><U+FFFD><U+38E8><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+04B2><U+FFFD><U+FFFD><U+05B1><U+FFFD><U+FFFD><U+FFFD><U+00F5><U+FFFD><U+FFFD><U+FFFD>
   list(meta = meta, p_mat = p_mat, ok = ok_vec)
 }
-
-
 
 
 scenarios <- expand.grid(

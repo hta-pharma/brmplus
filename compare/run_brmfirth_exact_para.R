@@ -58,8 +58,6 @@ exact_safe <- function(...) {
 }
 
 
-
-
 argv <- commandArgs(TRUE)
 if (length(argv) == 0) {
   print("No arguments supplied.")
@@ -598,8 +596,6 @@ run_scenario <- function(param, n, event, hypothesis, R,
   }
   list(full_arr = full_arr, ok = ok_vec)
 }
-
-
 
 
 t0 <- Sys.time()
