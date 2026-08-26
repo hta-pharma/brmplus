@@ -36,7 +36,7 @@ if [[ ! -f "$code_dir/run_brmfirth_exact_para.R" ]]; then
   code_dir="$script_dir"
 fi
 run_file="${code_dir}/run_brmfirth_exact_para.R"
-ci_file="${code_dir}/CI_exact_adapt_para_noearlystop.R"
+ci_file="${code_dir}/CI_exact_adapt_para.R"
 
 n="${1:-100}"
 param="${2:-RR}"

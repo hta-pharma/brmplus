@@ -1,12 +1,11 @@
 ## -------------------------------------------------------------------------
 ## Internal worker used by the optional bootstrap parallelization.
 ##
-## Relative to CI_exact_adapt_para.R, this worker keeps the same bootstrap
-## statistic and optimizer, but now:
-##   * uses the observed constrained fit at the current candidate as the
-##     starting value for the bootstrap alternative profile fit;
-##   * returns aggregate fitting diagnostics;
-##   * does NOT retry failed fits (the original safe fallback is retained).
+## This worker keeps the same bootstrap statistic and optimizer. Both the
+## bootstrap null and alternative fits start from the original estimate
+## passed into exact(); no warm start is used. It returns aggregate fitting
+## diagnostics and does NOT retry failed fits (the original safe fallback is
+## retained).
 ## -------------------------------------------------------------------------
 .exact_bootstrap_lrt_worker <- function(y.local, state) {
   tryCatch({
@@ -199,7 +198,7 @@
       )
     }
 
-    ## Bootstrap null fit: keep the original ML-based start.
+    ## Bootstrap null fit: start from the observed-data null constrained fit.
     null.fit <- profile_fit_worker(
       state$alpha.ml[state$j],
       state$j,
@@ -208,14 +207,14 @@
       beta.init = state$beta.null.start
     )
 
-    ## Bootstrap alternative fit: warm-start from the observed constrained
-    ## nuisance fit at this exact candidate value.
+    ## Bootstrap alternative fit: use the same original-input start as the
+    ## bootstrap null fit.
     alt.fit <- profile_fit_worker(
       state$alphaj,
       state$j,
       y.local,
-      alpha.init = state$alpha.alt.start,
-      beta.init = state$beta.alt.start
+      alpha.init = state$alpha.null.start,
+      beta.init = state$beta.null.start
     )
 
     diag <- diag_add_worker(null.fit$diagnostics, alt.fit$diagnostics)
@@ -238,13 +237,13 @@
 }
 
 exact <- function(param, y, x, va, vb, weight = NULL,
-                  max.step, thres = 1e-3, thres.dicho = 1e-2,
+                  max.step, thres = 1e-3, thres.dicho = 1e-3,
                   pars, se, pa, pb, optim.maxit = 50,
                   optim.reltol = 1e-6,
                   time.limit.sec = 10800,
                   parallel.bootstrap = FALSE,
                   ncores.bootstrap = 1L,
-                  bisection.max.step = 10L,
+                  bisection.max.step = 15L,
                   grid.mult = 2) {
   time.limit.sec <- as.numeric(time.limit.sec)[1L]
   if (is.na(time.limit.sec) || time.limit.sec <= 0) {
@@ -269,7 +268,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   parallel.bootstrap <- isTRUE(parallel.bootstrap)
   ncores.bootstrap <- as.integer(ncores.bootstrap)[1L]
   if (is.na(ncores.bootstrap) || ncores.bootstrap < 1L) {
-    stop("ncores.bootstrap must be a positive integer.", call. = FALSE)
+    stop("ncores.bootstrap must be a positive integer", call. = FALSE)
   }
   if (!parallel.bootstrap || ncores.bootstrap == 1L) {
     parallel.bootstrap <- FALSE
@@ -470,7 +469,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
 
   eps <- 1e-12
 
-  ## Baseline start retained for the null fit and as the first candidate start.
+  ## Baseline start used only to obtain the observed-data null constrained fit.
   alpha.start <- alpha.ml
   beta.start <- beta.ml
 
@@ -685,8 +684,8 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   ## ------------------------------------------------------------
   ## Cache the observed-data null profile once per alpha component
   ## ------------------------------------------------------------
-  ## In the original code this same observed null profile was recomputed for
-  ## every candidate value.  It is invariant for fixed j, so compute it once.
+  ## This fit is the fixed center anchor for all observed-data candidate fits
+  ## and the matched starting value for bootstrap null fits.
   null.fit.obs <- vector("list", pa)
   null.fit.diag <- vector("list", pa)
 
@@ -741,7 +740,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
 
     if (parallel.backend == "serial") {
       one_bootstrap_lrt <- function(y.sim) {
-        ## Null fit keeps the original ML start.
+        ## Null fit starts from the original estimate passed into exact().
         null.sim <- profile_fit(
           alpha.ml[j],
           j,
@@ -751,14 +750,13 @@ exact <- function(param, y, x, va, vb, weight = NULL,
           stage = "bootstrap_null_profile"
         )
 
-        ## Alternative fit warm-starts from the observed constrained fit at
-        ## the same candidate value.  Bootstrap replicates are NOT chained.
+        ## Alternative fit uses the same original-input start as the null fit.
         alt.sim <- profile_fit(
           alphaj,
           j,
           y.sim,
-          alpha.init = candidate.fit$alpha,
-          beta.init = candidate.fit$beta,
+          alpha.init = alpha.start,
+          beta.init = beta.start,
           stage = "bootstrap_alt_profile"
         )
 
@@ -790,8 +788,6 @@ exact <- function(param, y, x, va, vb, weight = NULL,
         optim.reltol = optim.reltol,
         alpha.null.start = alpha.start,
         beta.null.start = beta.start,
-        alpha.alt.start = candidate.fit$alpha,
-        beta.alt.start = candidate.fit$beta,
         alpha.ml = alpha.ml,
         alphaj = alphaj,
         j = j,
@@ -878,7 +874,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   }
 
   ## ------------------------------------------------------------
-  ## Dichotomy with 2x outward grid, nearest-candidate warm start,
+  ## Dichotomy with 2x outward grid, fixed original-input candidate starts,
   ## cached observed candidate fits, and explicit bisection diagnostics.
   ## ------------------------------------------------------------
   dichotomy <- function(j, alpha.low, alpha.up,
@@ -894,8 +890,9 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     mle <- if (direction == "low") alpha.up else alpha.low
     boundary <- if (direction == "low") alpha.low else alpha.up
 
-    ## Candidate-fit cache.  Seed it with the already cached observed null fit
-    ## at the MLE-side point, so both lower and upper searches reuse it.
+    ## Candidate-fit cache. Seed it with the observed-data null fit at the
+    ## MLE-side point. New candidate fits do NOT inherit another candidate's
+    ## nuisance solution; every new candidate starts from this same center fit.
     candidate.values <- mle
     candidate.fits <- list(null.fit.obs[[j]])
 
@@ -918,23 +915,14 @@ exact <- function(param, y, x, va, vb, weight = NULL,
         return(candidate.fits[[cached]])
       }
 
-      ## Nearest evaluated *converged* candidate is preferred as the warm
-      ## start.  If none is converged, fall back to the nearest cached fit.
-      conv <- vapply(candidate.fits, function(z) isTRUE(z$converged), logical(1))
-      eligible <- which(conv)
-      if (!length(eligible)) eligible <- seq_along(candidate.fits)
-
-      nearest <- eligible[
-        which.min(abs(candidate.values[eligible] - a))
-      ]
-      start.fit <- candidate.fits[[nearest]]
-
+      ## Fixed original-input start: every observed-data candidate is fit
+      ## independently from the estimate originally passed into exact().
       fit <- profile_fit(
         a,
         j,
         y,
-        alpha.init = start.fit$alpha,
-        beta.init = start.fit$beta,
+        alpha.init = alpha.start,
+        beta.init = beta.start,
         stage = "observed_candidate_profile"
       )
 
@@ -1171,23 +1159,19 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     check_exact_deadline("p_value")
     this.diag <- diag_zero()
 
-    ## Reuse the null fit if alpha=0 coincides numerically with the MLE-side
-    ## candidate; otherwise warm-start from the cached observed null fit.
-    if (abs(alpha.ml[j]) <= 1e-12 * max(1, abs(alpha.ml[j]))) {
-      fit.p <- null.fit.obs[[j]]
-      this.diag$candidate.cache.hits <- this.diag$candidate.cache.hits + 1L
-    } else {
-      fit.p <- profile_fit(
-        0,
-        j,
-        y,
-        alpha.init = null.fit.obs[[j]]$alpha,
-        beta.init = null.fit.obs[[j]]$beta,
-        stage = "p_value_observed_profile"
-      )
-      this.diag <- diag_add(this.diag, fit.p$diagnostics)
-      this.diag$candidate.fits <- this.diag$candidate.fits + 1L
-    }
+    ## Fit the observed alpha=0 profile independently from the original
+    ## estimate passed into exact(). This keeps the observed P-value fit on
+    ## the same fixed-start rule as all non-bootstrap candidate fits.
+    fit.p <- profile_fit(
+      0,
+      j,
+      y,
+      alpha.init = alpha.start,
+      beta.init = beta.start,
+      stage = "p_value_observed_profile"
+    )
+    this.diag <- diag_add(this.diag, fit.p$diagnostics)
+    this.diag$candidate.fits <- this.diag$candidate.fits + 1L
 
     LRT.obs.p <- 2 * (fit.p$value - null.fit.obs[[j]]$value)
 
@@ -1243,7 +1227,13 @@ exact <- function(param, y, x, va, vb, weight = NULL,
       nsim.p.value = 200L,
       parallel.backend = parallel.backend,
       ncores.bootstrap = ncores.bootstrap,
-      failure.retry.enabled = FALSE
+      failure.retry.enabled = FALSE,
+      observed.candidate.start = "original_input_estimate",
+      bootstrap.null.start = "original_input_estimate",
+      bootstrap.candidate.start = "original_input_estimate",
+      pvalue.observed.start = "original_input_estimate",
+      pvalue.bootstrap.null.start = "original_input_estimate",
+      pvalue.bootstrap.candidate.start = "original_input_estimate"
     ),
     observed.null = lapply(
       seq_len(pa),

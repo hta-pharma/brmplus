@@ -68,7 +68,7 @@ source_all <- function() {
   files <- c("getProbScalarRR.R", "getProbScalarRD.R", "1_CallMLE.R",
              "1.1_MLE_Point.R", "MLE_Point_Firth_for_RR.R",
              "MLE_Point_Firth_for_RD.R", "1.2_MLE_Var.R", "bayes_p.R",
-             "MyFunc.R", "CI_exact_adapt_para_noearlystop.R", "data_generation_simulation.R")
+             "MyFunc.R", "CI_exact_adapt_para.R", "data_generation_simulation.R")
   for (f in files) source(f)
   invisible(NULL)
 }
@@ -318,7 +318,7 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     ans
   })
   ## Report the complete adaptive-BRM method time: fit plus adjustment.
-  save_time("brm_b", z_bad)
+  save_time("brm_b", z_bad, z_brm$elapsed)
   fit_bad <- z_bad$value
 
   ## BRM Firth and boundary-adjusted BRM Firth
@@ -338,7 +338,7 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     ans
   })
   ## Report the complete adaptive Firth-BRM time: fit plus adjustment.
-  save_time("brm-FC_b", z_fcad)
+  save_time("brm-FC_b", z_fcad, z_fc$elapsed)
 
   ## Exact/BC timings include their required point-estimator fit.
   set.seed(seed + exact_seed_offset)
