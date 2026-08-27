@@ -83,7 +83,7 @@ MLEst <- function(
       p = p.value
     )
   } else if (CI == "exact") {
-    ci.est.alpha <- exact(param, y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, point.est, sd.est, pa, pb)
+    ci.est.alpha <- exact(param, y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, point.est, sd.est, pa, pb)
     ci.est <- list(
       low = c(ci.est.alpha$low, conf.lower[(pa + 1):(pa + pb)]),
       up = c(ci.est.alpha$up, conf.upper[(pa + 1):(pa + pb)]),

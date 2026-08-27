@@ -142,7 +142,7 @@ simulate.rr <- function(n, event, hypothesis, seed,
   weight <- rep(1, length(y))
   max.step <- min(pa * 20, 1000)
   thres <- 1e-6
-  thres.dicho <- 1e-2
+  thres.dicho <- 1e-3
 
   ## brm
   est.brm <- MLEst("RR", y, x, va, vb, weight, max.step, thres,
@@ -175,16 +175,16 @@ simulate.rr <- function(n, event, hypothesis, seed,
   }
   ## brm-FC-BC
   if (!is.null(seed)) set.seed(seed + exact_seed_offset)
-  est.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.firth$point.est, est.brm.firth$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  est.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.firth$point.est, est.brm.firth$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm-FC_b-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 1L)
-  est.exact.ad <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.firth.ad$point.est, est.brm.firth.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.exact.ad <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.firth.ad$point.est, est.brm.firth.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 2L)
-  est.brm.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm$point.est, est.brm$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.brm.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm$point.est, est.brm$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm_b-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 3L)
-  est.brm.ad.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.brm.ad.exact <- exact_safe("RR", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
 
 
   ### result
@@ -326,16 +326,16 @@ simulate.rd <- function(n, event, hypothesis, seed,
 
   ## brm-FC-BC
   if (!is.null(seed)) set.seed(seed + exact_seed_offset)
-  est.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.firth$point.est, est.brm.firth$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  est.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.firth$point.est, est.brm.firth$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm-FC_b-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 1L)
-  est.exact.ad <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.firth.ad$point.est, est.brm.firth.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.exact.ad <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.firth.ad$point.est, est.brm.firth.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 2L)
-  est.brm.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm$point.est, est.brm$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.brm.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm$point.est, est.brm$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
   ## brm_b-BC
-  if (!is.null(seed)) set.seed(seed + exact_seed_offset + 3L)
-  est.brm.ad.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-2, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
+  if (!is.null(seed)) set.seed(seed + exact_seed_offset)
+  est.brm.ad.exact <- exact_safe("RD", y, x, va, vb, weight, max.step, thres, thres.dicho = 1e-3, est.brm.ad$point.est, est.brm.ad$se.est, pa, pb, parallel.bootstrap = exact_parallel, ncores.bootstrap = exact_ncores)
 
 
   ### result

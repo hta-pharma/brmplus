@@ -36,7 +36,7 @@ exact_ncores <- 1L # inner exact() workers; requires ncores = 1
 argv <- commandArgs(trailingOnly = TRUE)
 if (length(argv)) for (a in argv) eval(parse(text = a))
 
-seeds <- seq_len(1000L)
+seeds <- seq_len(100L)
 R <- length(seeds)
 
 stopifnot(param %in% c("RR", "RD"))
@@ -69,7 +69,7 @@ source_all <- function() {
     "getProbScalarRR.R", "getProbScalarRD.R", "1_CallMLE.R",
     "1.1_MLE_Point.R", "MLE_Point_Firth_for_RR.R",
     "MLE_Point_Firth_for_RD.R", "1.2_MLE_Var.R", "bayes_p.R",
-    "MyFunc.R", "CI_exact_adapt_para.R", "data_generation_simulation.R"
+    "MyFunc.R", "CI_exact_diff.R", "data_generation_simulation.R"
   )
   for (f in files) source(f)
   invisible(NULL)
@@ -111,6 +111,36 @@ pack_exact_result <- function(fit, ci) {
     up = ci$up[1],
     p = ci$p[1]
   )
+}
+
+extract_estimation_result <- function(value) {
+  out <- setNames(
+    rep(NA_real_, 5L),
+    c("estimate", "se", "low", "up", "p")
+  )
+  if (is.null(value)) {
+    return(out)
+  }
+
+  first_numeric <- function(x) {
+    if (is.null(x) || length(x) == 0L) {
+      return(NA_real_)
+    }
+    suppressWarnings(as.numeric(x[[1L]]))
+  }
+
+  if (is.list(value)) {
+    out[] <- c(
+      first_numeric(value$point.est),
+      first_numeric(value$se.est),
+      first_numeric(value$conf.lower),
+      first_numeric(value$conf.upper),
+      first_numeric(value$p.value)
+    )
+  } else if (is.numeric(value) && length(value) >= 5L) {
+    out[] <- as.numeric(value[seq_len(5L)])
+  }
+  out
 }
 
 rr_cmh_fit <- function(Na0, Na1, N01, N11) {
@@ -332,20 +362,44 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
   tm <- numeric()
   er <- character()
   ok <- logical()
+  estimate <- se <- low <- up <- p <- numeric()
   save_time <- function(name, z, add = 0) {
     tm[name] <<- z$elapsed + add
     er[name] <<- z$error
     ok[name] <<- z$success
+    result <- extract_estimation_result(z$value)
+    estimate[name] <<- result[["estimate"]]
+    se[name] <<- result[["se"]]
+    low[name] <<- result[["low"]]
+    up[name] <<- result[["up"]]
+    p[name] <<- result[["p"]]
   }
 
   ## BRM and its boundary version
   z_brm <- timed(MLEst(param, y, x, va, vb, w, max.step, thres, rep(0, pa), rep(0, pb), pa, pb))
   save_time("brm", z_brm)
   fit_b <- z_brm$value
+
+  ## Draw the boundary Bayes estimate only once and reuse it for both
+  ## adaptive BRM variants.  A second call would consume a different part
+  ## of the RNG stream and make brm_b and brm-FC_b disagree.
+  boundary_case <- P0 %in% c(0, 1) || P1 %in% c(0, 1)
+  by <- NULL
+  bayes_elapsed <- 0
+  bayes_error <- NA_character_
+  if (boundary_case) {
+    z_by <- timed(
+      if (param == "RR") bayes_est_RR(Na0, Na1, N01, N11) else bayes_est_RD(Na0, Na1, N01, N11)
+    )
+    by <- z_by$value
+    bayes_elapsed <- z_by$elapsed
+    bayes_error <- z_by$error
+  }
+
   z_bad <- timed({
     ans <- fit_b
-    if (P0 %in% c(0, 1) || P1 %in% c(0, 1)) {
-      by <- if (param == "RR") bayes_est_RR(Na0, Na1, N01, N11) else bayes_est_RD(Na0, Na1, N01, N11)
+    if (boundary_case) {
+      if (is.null(by)) stop(bayes_error)
       ans$point.est[1] <- by$point.est
       ans$se.est[1] <- by$se.est
       ans$conf.lower[1] <- by$conf.lower
@@ -355,7 +409,7 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     ans
   })
   ## Report the complete adaptive-BRM method time: fit plus adjustment.
-  save_time("brm_b", z_bad, z_brm$elapsed)
+  save_time("brm_b", z_bad, z_brm$elapsed + bayes_elapsed)
   fit_bad <- z_bad$value
 
   ## BRM Firth and boundary-adjusted BRM Firth
@@ -364,8 +418,8 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
   fit_fc <- z_fc$value
   z_fcad <- timed({
     ans <- fit_fc
-    if (P0 %in% c(0, 1) || P1 %in% c(0, 1)) {
-      by <- if (param == "RR") bayes_est_RR(Na0, Na1, N01, N11) else bayes_est_RD(Na0, Na1, N01, N11)
+    if (boundary_case) {
+      if (is.null(by)) stop(bayes_error)
       ans$point.est[1] <- by$point.est
       ans$se.est[1] <- by$se.est
       ans$conf.lower[1] <- by$conf.lower
@@ -375,14 +429,14 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     ans
   })
   ## Report the complete adaptive Firth-BRM time: fit plus adjustment.
-  save_time("brm-FC_b", z_fcad, z_fc$elapsed)
+  save_time("brm-FC_b", z_fcad, z_fc$elapsed + bayes_elapsed)
 
   ## Exact/BC timings include their required point-estimator fit.
   set.seed(seed + exact_seed_offset)
   z_bc <- timed(if (is.null(fit_b)) {
     NULL
   } else {
-    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-3,
       fit_b$point.est, fit_b$se.est, pa, pb,
       parallel.bootstrap = exact_parallel,
       ncores.bootstrap = exact_ncores
@@ -390,23 +444,23 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     pack_exact_result(fit_b, ci)
   })
   save_time("brm-BC", z_bc, z_brm$elapsed)
-  set.seed(seed + exact_seed_offset + 1L)
+  set.seed(seed + exact_seed_offset)
   z_bbc <- timed(if (is.null(fit_bad)) {
     NULL
   } else {
-    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-3,
       fit_bad$point.est, fit_bad$se.est, pa, pb,
       parallel.bootstrap = exact_parallel,
       ncores.bootstrap = exact_ncores
     )
     pack_exact_result(fit_bad, ci)
   })
-  save_time("brm_b-BC", z_bbc, z_brm$elapsed + z_bad$elapsed)
-  set.seed(seed + exact_seed_offset + 10L)
+  save_time("brm_b-BC", z_bbc, z_brm$elapsed + bayes_elapsed + z_bad$elapsed)
+  set.seed(seed + exact_seed_offset)
   z_fcbc <- timed(if (is.null(fit_fc)) {
     NULL
   } else {
-    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-3,
       fit_fc$point.est, fit_fc$se.est, pa, pb,
       parallel.bootstrap = exact_parallel,
       ncores.bootstrap = exact_ncores
@@ -414,18 +468,18 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     pack_exact_result(fit_fc, ci)
   })
   save_time("brm-FC-BC", z_fcbc, z_fc$elapsed)
-  set.seed(seed + exact_seed_offset + 11L)
+  set.seed(seed + exact_seed_offset)
   z_fcadbc <- timed(if (is.null(z_fcad$value)) {
     NULL
   } else {
-    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-2,
+    ci <- exact_safe(param, y, x, va, vb, w, max.step, thres, 1e-3,
       z_fcad$value$point.est, z_fcad$value$se.est, pa, pb,
       parallel.bootstrap = exact_parallel,
       ncores.bootstrap = exact_ncores
     )
     pack_exact_result(z_fcad$value, ci)
   })
-  save_time("brm-FC_b-BC", z_fcadbc, z_fc$elapsed + z_fcad$elapsed)
+  save_time("brm-FC_b-BC", z_fcadbc, z_fc$elapsed + bayes_elapsed + z_fcad$elapsed)
 
   ## Standard effect-measure-specific methods
   if (param == "RR") {
@@ -469,7 +523,21 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
       "brm_b-BC", "brm-FC_b-BC", "GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2"
     )
   }
-  list(time = tm[wanted], success = ok[wanted], error = er[wanted])
+  ## Match run_brmfirth_exact.R: rows are the five reported statistics and
+  ## columns are methods.  Exact/BC methods use the point estimate and SE from
+  ## their fitting method, and low/up/p from exact().
+  result.comp <- rbind(
+    point.est = unname(estimate[wanted]),
+    se.est = unname(se[wanted]),
+    con.lower = unname(low[wanted]),
+    con.upper = unname(up[wanted]),
+    p.value = unname(p[wanted])
+  )
+  colnames(result.comp) <- wanted
+  list(
+    time = tm[wanted], success = ok[wanted], error = er[wanted],
+    estimation = result.comp
+  )
 }
 
 ## ------------------------- parallel run -------------------------
@@ -522,7 +590,7 @@ if (exact_parallel) {
     .options.snow = opts,
     .export = c(
       "source_all", "timed", "exact_safe",
-      "pack_exact_result", "rr_cmh_fit",
+      "pack_exact_result", "extract_estimation_result", "rr_cmh_fit",
       "rr_glm_fit", "rd_glm_fit", "rd_lpm_fit",
       "mn_fit", "firth_logbin_try",
       "firth_logpois", "firth_robust_logpois",
@@ -543,6 +611,24 @@ if (exact_parallel) {
 
 time_mat <- do.call(rbind, lapply(res, `[[`, "time"))
 success_mat <- do.call(rbind, lapply(res, `[[`, "success"))
+estimation_df <- do.call(rbind, lapply(seq_along(res), function(i) {
+  ans <- res[[i]]$estimation
+  data.frame(
+    seed = seeds[[i]],
+    method = colnames(ans),
+    estimate = unname(ans["point.est", ]),
+    se = unname(ans["se.est", ]),
+    low = unname(ans["con.lower", ]),
+    up = unname(ans["con.upper", ]),
+    p = unname(ans["p.value", ]),
+    elapsed_seconds = unname(res[[i]]$time),
+    success = unname(res[[i]]$success),
+    error = unname(res[[i]]$error),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+}))
+row.names(estimation_df) <- NULL
 time_df <- data.frame(seed = seeds, time_mat, check.names = FALSE)
 success_df <- data.frame(seed = seeds, success_mat, check.names = FALSE)
 successful_time <- time_mat
@@ -566,4 +652,5 @@ tag <- paste(param, event, hypothesis, paste0("n", n), paste0("R", R), sep = "_"
 write.csv(time_df, file.path(result_dir, paste0("para_time_raw_", tag, ".csv")), row.names = FALSE)
 write.csv(success_df, file.path(result_dir, paste0("para_time_success_", tag, ".csv")), row.names = FALSE)
 write.csv(summary_df, file.path(result_dir, paste0("para_time_summary_", tag, ".csv")), row.names = FALSE)
+write.csv(estimation_df, file.path(result_dir, paste0("para_estimation_results_", tag, ".csv")), row.names = FALSE)
 print(summary_df)

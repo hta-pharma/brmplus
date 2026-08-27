@@ -201,7 +201,7 @@ one_rep <- function(r, param, n, event, hypothesis,
         RD.brm.ad$conf.upper[1] <- est.bayes$conf.upper
         RD.brm.ad$p.value[1] <- est.bayes$p.value
       }
-      set.seed(r + exact_seed_offset + 100L)
+      set.seed(r + exact_seed_offset)
       exact_RD <- exact_safe("RD", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3,
         RD.brm.ad$point.est, RD.brm.ad$se.est, pa, pb
@@ -221,11 +221,11 @@ one_rep <- function(r, param, n, event, hypothesis,
         firth_ad_RR$conf.upper[1] <- est.bayes$conf.upper
         firth_ad_RR$p.value[1] <- est.bayes$p.value
       }
-      set.seed(r + exact_seed_offset + 10L)
+      set.seed(r + exact_seed_offset)
       firth_exact_RR <- exact_safe("RR", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3, fit_firth_RR$point.est, fit_firth_RR$se.est, pa, pb
       )
-      set.seed(r + exact_seed_offset + 11L)
+      set.seed(r + exact_seed_offset)
       firth_ad_exact_RR <- exact_safe("RR", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3, firth_ad_RR$point.est, firth_ad_RR$se.est, pa, pb
       )
@@ -243,11 +243,11 @@ one_rep <- function(r, param, n, event, hypothesis,
         firth_ad_RD$conf.upper[1] <- est.bayes$conf.upper
         firth_ad_RD$p.value[1] <- est.bayes$p.value
       }
-      set.seed(r + exact_seed_offset + 110L)
+      set.seed(r + exact_seed_offset)
       firth_exact_RD <- exact_safe("RD", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3, fit_firth_RD$point.est, fit_firth_RD$se.est, pa, pb
       )
-      set.seed(r + exact_seed_offset + 111L)
+      set.seed(r + exact_seed_offset)
       firth_ad_exact_RD <- exact_safe("RD", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3, firth_ad_RD$point.est, firth_ad_RD$se.est, pa, pb
       )
