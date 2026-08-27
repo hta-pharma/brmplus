@@ -168,7 +168,7 @@ one_rep <- function(r, param, n, event, hypothesis,
       P0 <- N0_1 / Na0
       P1 <- N1_1 / Na1
 
-      ## brm MLE + BC exact
+      ## BRM MLE, ordinary exact, and boundary-adjusted exact
       fit_brm_RR <- MLEst("RR", y, x, va, vb, weight, max.step, thres,
         alpha.start = alpha.start, beta.start = beta.start, pa, pb
       )
@@ -184,6 +184,11 @@ one_rep <- function(r, param, n, event, hypothesis,
       }
       set.seed(r + exact_seed_offset)
       exact_RR <- exact_safe("RR", y, x, va, vb, weight, max.step, thres,
+        thres.dicho = 1e-3,
+        fit_brm_RR$point.est, fit_brm_RR$se.est, pa, pb
+      )
+      set.seed(r + exact_seed_offset)
+      brm_ad_exact_RR <- exact_safe("RR", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3,
         RR.brm.ad$point.est, RR.brm.ad$se.est, pa, pb
       )
@@ -203,6 +208,11 @@ one_rep <- function(r, param, n, event, hypothesis,
       }
       set.seed(r + exact_seed_offset)
       exact_RD <- exact_safe("RD", y, x, va, vb, weight, max.step, thres,
+        thres.dicho = 1e-3,
+        fit_brm_RD$point.est, fit_brm_RD$se.est, pa, pb
+      )
+      set.seed(r + exact_seed_offset)
+      brm_ad_exact_RD <- exact_safe("RD", y, x, va, vb, weight, max.step, thres,
         thres.dicho = 1e-3,
         RD.brm.ad$point.est, RD.brm.ad$se.est, pa, pb
       )
@@ -431,6 +441,8 @@ one_rep <- function(r, param, n, event, hypothesis,
         brm_RD = fit_brm_RD$p.value[1],
         brm_BC_RR = exact_RR$p[1],
         brm_BC_RD = exact_RD$p[1],
+        brm_ad_exact_RR = brm_ad_exact_RR$p[1],
+        brm_ad_exact_RD = brm_ad_exact_RD$p[1],
         lb = summary(fit_lb)$coefficients[1, 4],
         lp = summary(fit_lp)$coefficients[1, 4],
         rlp = as.numeric(fit_rlp[5]),
@@ -463,6 +475,7 @@ one_rep <- function(r, param, n, event, hypothesis,
         ok = FALSE,
         p = c(
           brm_RR = NA_real_, brm_RD = NA_real_, brm_BC_RR = NA_real_, brm_BC_RD = NA_real_,
+          brm_ad_exact_RR = NA_real_, brm_ad_exact_RD = NA_real_,
           lb = NA_real_, lp = NA_real_, rlp = NA_real_, glm_id = NA_real_, lpm = NA_real_,
           MN = NA_real_, CMH = NA_real_, p.hat.RR = NA_real_, p.hat.star.RR = NA_real_,
           p.tilde.RR = NA_real_, p.tilde.star.RR = NA_real_, p.tilde.doustar.RR = NA_real_,
@@ -551,6 +564,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
   p_mat <- do.call(rbind, lapply(res, `[[`, "p"))
   colnames(p_mat) <- c(
     "brm_RR", "brm_RD", "brm_BC_RR", "brm_BC_RD",
+    "brm_ad_exact_RR", "brm_ad_exact_RD",
     "lb", "lp", "rlp", "glm_id", "lpm", "MN", "CMH",
     "GC_RR", "GCBR_RR", "GCFC_RR", "GCFCBR1_RR", "GCFCBR2_RR",
     "GC_RD", "GCBR_RD", "GCFC_RD", "GCFCBR1_RD", "GCFCBR2_RD",
@@ -576,7 +590,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
       "_hyp=", hypothesis,
       "_R=", R
     )
-    write.csv(p_mat, file = file.path(result_dir, paste0("all27_", tag, ".csv")))
+    write.csv(p_mat, file = file.path(result_dir, paste0("all29_", tag, ".csv")))
   }
 
   ## <U+036C><U+02B1><U+FFFD><U+FFFD><U+FFFD><U+0638><U+FFFD><U+FFFD><U+38E8><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+04B2><U+FFFD><U+FFFD><U+05B1><U+FFFD><U+FFFD><U+FFFD><U+00F5><U+FFFD><U+FFFD><U+FFFD>
