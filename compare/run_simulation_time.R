@@ -69,7 +69,7 @@ source_all <- function() {
     "getProbScalarRR.R", "getProbScalarRD.R", "1_CallMLE.R",
     "1.1_MLE_Point.R", "MLE_Point_Firth_for_RR.R",
     "MLE_Point_Firth_for_RD.R", "1.2_MLE_Var.R", "bayes_p.R",
-    "MyFunc.R", "CI_exact_diff.R", "data_generation_simulation.R"
+    "MyFunc.R", "CI_exact_adapt_para.R", "data_generation_simulation.R"
   )
   for (f in files) source(f)
   invisible(NULL)
