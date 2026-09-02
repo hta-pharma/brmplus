@@ -84,14 +84,16 @@ event_vec <- event
 ## 1) Truth-setting helper
 ## =========================
 get_truth <- function(param, event, hypothesis) {
-  if (event == "rare11") {
-    alpha.true <- if (hypothesis == "null") 0 else if (param == "RR") 2.4 else 0.1
-    beta.true <- if (hypothesis == "null") c(-5.73, -0.5) else c(-6.54, -0.5)
-    gamma.true <- c(0, 0)
-    return(list(alpha.true = alpha.true, beta.true = beta.true, gamma.true = gamma.true))
+  if (param == "RR" && event == "rare11") {
+    alpha.true <- log(11)
+    beta.true <- c(-6.1, -2)
+  } else if (param == "RD" && event == "rare11") {
+    alpha.true <- atanh(0.10)
+    beta.true <- c(-6.55, -0.5)
+  } else {
+    alpha.true <- 0
+    beta.true <- c(-6.1, -2)
   }
-  alpha.true <- 0
-  beta.true <- c(-6.1, -2)
   gamma.true <- c(0, 0)
   list(alpha.true = alpha.true, beta.true = beta.true, gamma.true = gamma.true)
 }
