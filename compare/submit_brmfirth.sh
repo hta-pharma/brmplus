@@ -1,22 +1,22 @@
 #!/bin/bash
-# Outer-parallel simulation using run_brmfirth_exact_para.R.
+# BRM-Firth simulation using run_brmfirth.R with outer parallelism.
 # The exact-CI bootstrap inside each simulation replicate is forced to serial.
 #
 # Usage:
-#   sbatch submit_brmfirth_exact_para_outer.sh \
+#   sbatch submit_brmfirth.sh \
 #     [n] [param] [event] [hypothesis] [result_dir] [outer_ncores]
 #
 # Example:
-#   sbatch submit_brmfirth_exact_para_outer.sh \
+#   sbatch submit_brmfirth.sh \
 #     100 RR rare alternative /path/to/results 100
 
-#SBATCH --job-name=brm_exact_outer
+#SBATCH --job-name=brmfirth
 #SBATCH --account=def-liteep
 #SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=104
 #SBATCH --mem=60G
-#SBATCH --output=brm_exact_outer_%j.out
-#SBATCH --error=brm_exact_outer_%j.err
+#SBATCH --output=brmfirth_%j.out
+#SBATCH --error=brmfirth_%j.err
 
 set -euo pipefail
 
@@ -32,10 +32,10 @@ export BLIS_NUM_THREADS=1
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 code_dir="${SLURM_SUBMIT_DIR:-$script_dir}"
-if [[ ! -f "$code_dir/run_brmfirth_exact_para.R" ]]; then
+if [[ ! -f "$code_dir/run_brmfirth.R" ]]; then
   code_dir="$script_dir"
 fi
-run_file="${code_dir}/run_brmfirth_exact_para.R"
+run_file="${code_dir}/run_brmfirth.R"
 ci_file="${code_dir}/CI_exact_adapt_para.R"
 
 n="${1:-100}"
@@ -97,7 +97,7 @@ exact_ncores=1
 cd "${code_dir}"
 mkdir -p "${result_dir}"
 
-echo "Starting BRM-Firth exact simulation"
+echo "Starting BRM-Firth simulation"
 echo "param=${param}, event=${event}, hypothesis=${hypothesis}"
 echo "n=${n}, seeds=1:1000"
 echo "outer_ncores=${outer_ncores}"
@@ -114,4 +114,4 @@ Rscript --vanilla --max-connections=512 "${run_file}" \
   "exact_ncores=${exact_ncores}" \
   "result_dir='${result_dir}'"
 
-echo "BRM-Firth exact simulation completed"
+echo "BRM-Firth simulation completed"

@@ -90,43 +90,9 @@ get_truth <- function(param, event, hypothesis) {
     gamma.true <- c(0, 0)
     return(list(alpha.true = alpha.true, beta.true = beta.true, gamma.true = gamma.true))
   }
-  if (param == "RR") {
-    if (event == "rare3") {
-      alpha.true <- 1.1
-      beta.true <- c(-4.8, -0.5)
-      gamma.true <- c(0, 0)
-    } else if (event == "rare11") {
-      alpha.true <- 2.4
-      beta.true <- c(-6.54, -0.5)
-      gamma.true <- c(0, 0)
-    } else if (event == "rare2") {
-      alpha.true <- 0.7
-      beta.true <- c(-5.5, 0.5)
-      gamma.true <- c(0, 0)
-    } else {
-      alpha.true <- 0
-      beta.true <- c(-5.73, -0.5)
-      gamma.true <- c(0, 0)
-    }
-  } else { # RD
-    if (event == "rare3") {
-      alpha.true <- 0.1
-      beta.true <- c(-4.8, -0.5)
-      gamma.true <- c(0, 0)
-    } else if (event == "rare11") {
-      alpha.true <- 0.1
-      beta.true <- c(-6.54, -0.5)
-      gamma.true <- c(0, 0)
-    } else if (event == "rare2") {
-      alpha.true <- 0.05
-      beta.true <- c(-5.5, 0.2)
-      gamma.true <- c(0, 0)
-    } else {
-      alpha.true <- 0
-      beta.true <- c(-5.73, -0.5)
-      gamma.true <- c(0, 0)
-    }
-  }
+  alpha.true <- 0
+  beta.true <- c(-6.1, -2)
+  gamma.true <- c(0, 0)
   list(alpha.true = alpha.true, beta.true = beta.true, gamma.true = gamma.true)
 }
 
@@ -135,8 +101,6 @@ get_truth <- function(param, event, hypothesis) {
 ## =========================
 one_rep <- function(r, param, n, event, hypothesis,
                     max.step = NULL, thres = 1e-6) {
-  set.seed(r)
-
   tru <- get_truth(param, event, hypothesis)
   alpha.true <- tru$alpha.true
   beta.true <- tru$beta.true
@@ -548,13 +512,13 @@ run_scenario <- function(param, n, event, hypothesis, R,
     NULL
   })
 
-  ## <U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+0236><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD>
-  # doRNG::registerDoRNG(1234)
+  ## Register reproducible parallel RNG streams.
+  doRNG::registerDoRNG(1234)
 
   res <- foreach(
     r = seq_len(R),
     .export = c("one_rep", "get_truth", "exact_safe", "exact_seed_offset"),
-    .noexport = c() # <U+FFFD><U+FFFD><U+0237><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+04AA><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD>
+    .noexport = c() # No explicit exclusions are required.
   ) %dopar% {
     one_rep(r, param, n, event, hypothesis, max.step = max.step, thres = thres)
   }
@@ -580,7 +544,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
     stringsAsFactors = FALSE
   )
 
-  ## <U+FFFD><U+FFFD><U+FFFD><U+FFFD> p_mat<U+FFFD><U+FFFD><U+00FF><U+FFFD><U+FFFD> scenario <U+04BB><U+FFFD><U+FFFD><U+FFFD><U+013C><U+FFFD><U+FFFD><U+FFFD>
+  ## Save one p-value matrix file per scenario.
   if (save_pmat) {
     if (!dir.exists(result_dir)) dir.create(result_dir, recursive = TRUE)
     tag <- paste0(
@@ -593,7 +557,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
     write.csv(p_mat, file = file.path(result_dir, paste0("all29_", tag, ".csv")))
   }
 
-  ## <U+036C><U+02B1><U+FFFD><U+FFFD><U+FFFD><U+0638><U+FFFD><U+FFFD><U+38E8><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+04B2><U+FFFD><U+FFFD><U+05B1><U+FFFD><U+FFFD><U+FFFD><U+00F5><U+FFFD><U+FFFD><U+FFFD>
+  ## Return the scenario results for downstream use.
   list(meta = meta, p_mat = p_mat, ok = ok_vec)
 }
 

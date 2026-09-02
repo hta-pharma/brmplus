@@ -132,7 +132,7 @@ m.prime.prime <- function(x) {
 fish <- function(x, beta) {
   eta <- drop(x %*% beta)
   w <- m.prime(eta) # length n
-  # t(x) %*% diag(w) %*% x  <U+FFFD><U+023C><U+FFFD><U+FFFD><U+FFFD>  crossprod(x * w, x)
+  # Equivalent to t(x) %*% diag(w) %*% x.
   crossprod(x * w, x) / nrow(x)
 }
 hii <- function(x, beta) {

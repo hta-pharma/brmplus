@@ -1,3 +1,4 @@
+# BRM-Firth simulation entry point.
 src_all <- function() {
   source("getProbScalarRR.R")
   source("getProbScalarRD.R")
@@ -401,7 +402,7 @@ simulate.rd <- function(n, event, hypothesis, seed,
 
 
 ## =========================
-## 2) One replicate (returns named pvals)
+## 2) One replicate (returns the full result matrix and status)
 ## =========================
 one_rep <- function(r, param, n, event, hypothesis,
                     max.step = NULL, thres = 1e-6,
@@ -422,8 +423,8 @@ one_rep <- function(r, param, n, event, hypothesis,
       exact_ncores = exact_ncores
     ),
     error = function(e) {
-      # <U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+0377><U+FFFD><U+FFFD><U+FFFD><U+04BB><U+FFFD><U+FFFD><U+022B> NA <U+FFFD><U+FFFD> 5xK <U+057C><U+03BB><U+FFFD><U+FFFD><U+FFFD><U+FFFD>K <U+05BB><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+05AA><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD>
-      # <U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+0235><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+05B1><U+FFFD><U+04F7><U+FFFD><U+FFFD><U+FFFD> NULL<U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+03F2><U+3D26><U+FFFD><U+FFFD>
+      # Return NULL on failure; run_scenario() records the error and leaves
+      # the corresponding 5 x K array slice as NA.
       error_msg <<- conditionMessage(e)
       NULL
     }
@@ -435,7 +436,7 @@ one_rep <- function(r, param, n, event, hypothesis,
 }
 
 ## =========================
-## 3) Run one scenario -> RETURN p_mat + (optional) SAVE p_mat
+## 3) Run one scenario -> return and optionally save a 5 x K x R array
 ## =========================
 run_scenario <- function(param, n, event, hypothesis, R,
                          ncores = 8, thres = 1e-6, max.step = NULL,
@@ -517,8 +518,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
     })
   }
 
-  ## <U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+0236><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD>
-  # doRNG::registerDoRNG(1234)
+  ## Each replicate calls set.seed(r), so results are reproducible without doRNG.
 
   seed_vec <- seq_len(R)
 
@@ -548,7 +548,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
 
   ok_vec <- vapply(res, `[[`, logical(1), "ok")
 
-  # --- <U+FFFD><U+FFFD><U+00FF><U+FFFD><U+FFFD> replicate <U+FFFD><U+FFFD> full (5 x K) <U+FFFD><U+0475><U+FFFD><U+FFFD><U+FFFD> full_arr: 5 x K x Rrun ---
+  # Stack each replicate's 5 x K matrix into full_arr: 5 x K x Rrun.
   full_list <- lapply(res, `[[`, "full")
 
   error_vec <- vapply(res, `[[`, character(1), "error")
@@ -564,7 +564,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
 
   template <- full_list[[valid[1]]]
 
-  # <U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+00FF><U+FFFD><U+FFFD> full <U+FFFD><U+FFFD><U+03AC><U+FFFD><U+FFFD><U+04BB><U+FFFD><U+00A3><U+FFFD>5 x K<U+FFFD><U+FFFD>
+  # Use the first successful replicate to define the 5 x K dimensions.
   d1 <- nrow(template)
   d2 <- ncol(template)
   Rrun <- length(full_list)
@@ -591,7 +591,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
       "_R=", R
     )
 
-    # 2) <U+FFFD><U+FFFD><U+FFFD><U+FFFD> full_arr<U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD><U+FFFD>
+    # Save the complete simulation array.
     saveRDS(full_arr, file = file.path(result_dir, paste0("brmpara_all8_arr_", tag, ".rds")))
   }
   list(full_arr = full_arr, ok = ok_vec)

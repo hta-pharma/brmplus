@@ -1124,7 +1124,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   }
 
   ## ------------------------------------------------------------
-  ## P-values: same B=200 and same acceptability definition.
+  ## P-values: same B=500 and same acceptability definition.
   ## Confidence-limit searches are intentionally skipped in this variant.
   ## ------------------------------------------------------------
   p.value <- rep(0, pa)
@@ -1154,11 +1154,11 @@ exact <- function(param, y, x, va, vb, weight = NULL,
       0,
       j,
       candidate.fit = fit.p,
-      nsim = 200
+      nsim = 500
     )
     this.diag <- diag_add(this.diag, boot.p$diagnostics)
     this.diag$bootstrap.draws.p.value <-
-      this.diag$bootstrap.draws.p.value + 200L
+      this.diag$bootstrap.draws.p.value + 500L
     this.diag$acceptability.evaluations <-
       this.diag$acceptability.evaluations + 1L
 
@@ -1185,7 +1185,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
     settings = list(
       thres = thres,
       thres.dicho = thres.dicho,
-      nsim.p.value = 200L,
+      nsim.p.value = 500L,
       confidence.intervals.computed = FALSE,
       parallel.backend = parallel.backend,
       ncores.bootstrap = ncores.bootstrap,

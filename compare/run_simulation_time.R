@@ -523,7 +523,7 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
       "brm_b-BC", "brm-FC_b-BC", "GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2"
     )
   }
-  ## Match run_brmfirth_exact.R: rows are the five reported statistics and
+  ## Match run_brmfirth.R: rows are the five reported statistics and
   ## columns are methods.  Exact/BC methods use the point estimate and SE from
   ## their fitting method, and low/up/p from exact().
   result.comp <- rbind(

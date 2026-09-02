@@ -1164,7 +1164,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
   }
 
   ## ------------------------------------------------------------
-  ## P-values: same B=200 and same acceptability definition.
+  ## P-values: same B=500 and same acceptability definition.
   ## ------------------------------------------------------------
   p.value <- rep(0, pa)
   p.diag <- vector("list", pa)
@@ -1193,11 +1193,11 @@ exact <- function(param, y, x, va, vb, weight = NULL,
       0,
       j,
       candidate.fit = fit.p,
-      nsim = 200
+      nsim = 500
     )
     this.diag <- diag_add(this.diag, boot.p$diagnostics)
     this.diag$bootstrap.draws.p.value <-
-      this.diag$bootstrap.draws.p.value + 200L
+      this.diag$bootstrap.draws.p.value + 500L
     this.diag$acceptability.evaluations <-
       this.diag$acceptability.evaluations + 1L
 
@@ -1238,7 +1238,7 @@ exact <- function(param, y, x, va, vb, weight = NULL,
       nsim.coarse = 100L,
       nsim.confirm = 200L,
       nsim.refine = 200L,
-      nsim.p.value = 200L,
+      nsim.p.value = 500L,
       parallel.backend = parallel.backend,
       ncores.bootstrap = ncores.bootstrap,
       failure.retry.enabled = FALSE,
