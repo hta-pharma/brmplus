@@ -387,7 +387,6 @@ one_rep <- function(r, param, n, event, hypothesis,
       alpha.tilde.doustar.RD <- p.tilde.doustar.treat - p.tilde.doustar.control
 
 
-
       se.hat.RR <- sqrt(var.est.RR(li.hat, p.hat.control, p.hat.treat))
       se.hat.star.RR <- sqrt(var.est.RR(li.hat.star, p.hat.star.control, p.hat.star.treat))
       se.tilde.RR <- sqrt(var.est.RR(li.tilde, p.tilde.control, p.tilde.treat))
