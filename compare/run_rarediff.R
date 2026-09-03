@@ -40,7 +40,6 @@ compute_augmentation_cpp <- getFromNamespace("compute_augmentation_cpp", "brmplu
 
 param_vec <- c("RR", "RD")
 event_vec <- "rare11"
-hyp_vec <- "alternative"
 ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "8"))
 exact_seed_offset <- 1000000L
 
@@ -64,7 +63,6 @@ if (length(argv) == 0) {
 R <- 1000L
 if (!exists("result_dir")) result_dir <- file.path("results", "rarediff")
 
-if (!exists("hypothesis")) hypothesis <- "alternative"
 if (!exists("event")) event <- "rare11"
 if (exists("param")) {
   if (!param %in% c("RR", "RD")) stop("param must be 'RR' or 'RD'")
@@ -73,17 +71,13 @@ if (exists("param")) {
 if (!event %in% c("rare1", "rare11")) {
   stop("event must be 'rare1' or 'rare11'")
 }
-if (!hypothesis %in% c("null", "alternative")) {
-  stop("hypothesis must be 'null' or 'alternative'")
-}
-hyp_vec <- hypothesis
 event_vec <- event
 
 
 ## =========================
 ## 1) Truth-setting helper
 ## =========================
-get_truth <- function(param, event, hypothesis) {
+get_truth <- function(param, event) {
   if (param == "RR") {
     if (event == "rare11") {
       alpha.true <- log(11)
@@ -111,9 +105,9 @@ get_truth <- function(param, event, hypothesis) {
 ## =========================
 ## 2) One replicate (returns named pvals)
 ## =========================
-one_rep <- function(r, param, n, event, hypothesis,
+one_rep <- function(r, param, n, event,
                     max.step = NULL, thres = 1e-6) {
-  tru <- get_truth(param, event, hypothesis)
+  tru <- get_truth(param, event)
   alpha.true <- tru$alpha.true
   beta.true <- tru$beta.true
   gamma.true <- tru$gamma.true
@@ -473,7 +467,7 @@ one_rep <- function(r, param, n, event, hypothesis,
 ## =========================
 ## 3) Run one scenario -> RETURN p_mat + (optional) SAVE p_mat
 ## =========================
-run_scenario <- function(param, n, event, hypothesis, R,
+run_scenario <- function(param, n, event, R,
                          ncores = 8, thres = 1e-6, max.step = NULL,
                          result_dir = file.path("results", "rarediff"), save_pmat = TRUE) {
   ## cluster
@@ -532,7 +526,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
     .export = c("one_rep", "get_truth", "exact_safe", "exact_seed_offset"),
     .noexport = c() # No explicit exclusions are required.
   ) %dopar% {
-    one_rep(r, param, n, event, hypothesis, max.step = max.step, thres = thres)
+    one_rep(r, param, n, event, max.step = max.step, thres = thres)
   }
 
   ok_vec <- vapply(res, `[[`, logical(1), "ok")
@@ -550,7 +544,7 @@ run_scenario <- function(param, n, event, hypothesis, R,
   )
 
   meta <- data.frame(
-    n = n, event = event, hypothesis = hypothesis, param = param,
+    n = n, event = event, param = param,
     R = R,
     success_rate = mean(ok_vec),
     stringsAsFactors = FALSE
@@ -563,7 +557,6 @@ run_scenario <- function(param, n, event, hypothesis, R,
       "pmat_param=", param,
       "_n=", n,
       "_event=", event,
-      "_hyp=", hypothesis,
       "_R=", R
     )
     write.csv(p_mat, file = file.path(result_dir, paste0("all29_", tag, ".csv")))
@@ -577,7 +570,6 @@ run_scenario <- function(param, n, event, hypothesis, R,
 scenarios <- expand.grid(
   n = n,
   event = event_vec,
-  hypothesis = hyp_vec,
   param = param_vec,
   stringsAsFactors = FALSE
 )
@@ -592,7 +584,6 @@ for (s in seq_len(nrow(scenarios))) {
     param = scenarios$param[s],
     n = scenarios$n[s],
     event = scenarios$event[s],
-    hypothesis = scenarios$hypothesis[s],
     R = R,
     ncores = ncores,
     result_dir = result_dir,

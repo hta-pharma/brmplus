@@ -13,7 +13,6 @@ module load gcc/12.3   r/4.3.1
 n=${1:-50}
 param=${2:-RR}
 event=${3:-rare11}
-hypothesis=${4:-alternative}
 
 case "$param" in
   RR|RD) ;;
@@ -23,14 +22,9 @@ case "$event" in
   rare1|rare11) ;;
   *) echo "event must be rare1 or rare11" >&2; exit 2 ;;
 esac
-case "$hypothesis" in
-  null|alternative) ;;
-  *) echo "hypothesis must be null or alternative" >&2; exit 2 ;;
-esac
-
 cd "$code_dir"
 mkdir -p "$result_dir/Rout"
 R --vanilla --max-connections=512 CMD BATCH --no-save --no-restore \
-  "--args n=$n param='$param' event='$event' hypothesis='$hypothesis' result_dir='${result_dir}'" \
+  "--args n=$n param='$param' event='$event' result_dir='${result_dir}'" \
   "$code_dir/run_rarediff.R" \
-  "$result_dir/Rout/rarediff_${param}_${event}_${hypothesis}_N_${n}_R_1000.Rout"
+  "$result_dir/Rout/rarediff_${param}_${event}_N_${n}_R_1000.Rout"
