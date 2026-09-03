@@ -535,7 +535,7 @@ run_scenario <- function(param, n, event, R,
   colnames(p_mat) <- c(
     "brm_RR", "brm_RD", "brm_BC_RR", "brm_BC_RD",
     "brm_ad_exact_RR", "brm_ad_exact_RD",
-    "lb", "lp", "rlp", "glm_id", "lpm", "MN", "CMH",
+    "lb", "lp", "rlp", "lpm", "rlpm", "MN", "CMH",
     "GC_RR", "GCBR_RR", "GCFC_RR", "GCFCBR1_RR", "GCFCBR2_RR",
     "GC_RD", "GCBR_RD", "GCFC_RD", "GCFCBR1_RD", "GCFCBR2_RD",
     "brm_firth_RR", "brm_firth_RD",
