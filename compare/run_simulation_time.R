@@ -519,7 +519,7 @@ one_rep_time <- function(seed, param, n, event, hypothesis, exact_seed_offset,
     )
   } else {
     c(
-      "GLM", "LPM", "MN", "brm", "brm-BC", "brm-FC", "brm-FC_b", "brm-FC-BC", "brm_b",
+      "LPM", "RLPM", "MN", "brm", "brm-BC", "brm-FC", "brm-FC_b", "brm-FC-BC", "brm_b",
       "brm_b-BC", "brm-FC_b-BC", "GC", "GC-BR", "GC-FC", "GC-FC-BR1", "GC-FC-BR2"
     )
   }
