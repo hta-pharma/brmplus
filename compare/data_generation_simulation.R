@@ -687,7 +687,7 @@ simulate.rd <- function(n, event, hypothesis, seed = NULL, exact_seed_offset = 1
 
   result.comp <- rbind(point.est, se.est, CI.low.or, CI.up.or, p.value)
   colnames(result.comp) <- c(
-    "brm", "bayes", "glm", "lpm", "MN", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
+    "brm", "bayes", "lpm", "rlpm", "MN", "g-computation", "GC_BR", "GC_FC", "GC_FC_BR1", "GC_FC_BR2"
   )
   return(result.comp)
 }
