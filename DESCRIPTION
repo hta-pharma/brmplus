@@ -1,33 +1,28 @@
 Package: brmplus
 Type: Package
-
 Title: Extended Binary Regression Models for Small-Sample and Rare-Event Studies
-
 Version: 1.1.0
 Date: 2026-05-29
-
+Depends: R (>= 3.5.0)
 Authors@R: c(
-    person("Conor", "Klamann",
-           role = c("aut", "cre"),
-           email = "conor.klamann@utoronto.ca"),
     person("Jingxin", "Yan",
            role = c("aut", "cre"),
            email = "jingxin.yan@mail.utoronto.ca"),
+    person("Conor", "Klamann",
+           role = "aut",
+           email = "conor.klamann@utoronto.ca"),
     person("X. Gregory", "Chen", role = "aut"),
     person("Linbo", "Wang", role = "aut")
-)
-
+    )
 Description: An extension of the binary regression model (BRM)
     framework for risk ratio and risk difference inference.
     Implements likelihood-based estimation, Blaker-type exact
     confidence intervals, and Bayesian corrections for
     small-sample, low-incidence, and zero-event studies.
-
 License: MIT + file LICENSE
 Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 7.2.3
-
 Suggests:
     knitr,
     rmarkdown,
@@ -35,7 +30,6 @@ Suggests:
     testthat (>= 3.0.0)
 Imports: Rcpp (>= 1.0.10), stats
 LinkingTo: Rcpp, RcppArmadillo
-URL: http://github.com/mclements/rstpm2
-BugReports: http://github.com/mclements/rstpm2/issues
+URL: https://github.com/hta-pharma/brmplus
+BugReports: https://github.com/hta-pharma/brmplus/issues
 Config/testthat/edition: 3
-

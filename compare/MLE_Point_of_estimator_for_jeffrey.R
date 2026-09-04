@@ -1,8 +1,8 @@
-#' Penalized Maximum‐Likelihood Estimation
+#' Penalized Maximum<U+2010>Likelihood Estimation
 #'
 #' Penalizing the log-likelihood function with the Jeffry's prior
 #'
-#' Alternating coordinate‐descent updates are used to optimize over
+#' Alternating coordinate<U+2010>descent updates are used to optimize over
 #' \eqn{\alpha} and \eqn{\beta} in turn.
 #'
 #' @param param Character scalar, either \code{"RR"} or \code{"RD"}.
@@ -15,7 +15,7 @@
 #' @param beta.start Numeric vector of length \eqn{p_b}.  Initial values for
 #'   the \eqn{\beta} parameters.
 #' @param weight Numeric vector of length \eqn{n}.  Observation weight.
-#' @param max.step Integer.  Maximum number of alternating coordinate‐descent
+#' @param max.step Integer.  Maximum number of alternating coordinate<U+2010>descent
 #'   iterations.
 #' @param thres Numeric.  Convergence threshold on relative parameter change.
 #' @param pa Integer.  Number of \eqn{\alpha} parameters (\eqn{p_a}).

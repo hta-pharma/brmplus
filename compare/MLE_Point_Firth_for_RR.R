@@ -1,9 +1,9 @@
-#' Maximum Likelihood Estimation for Relative‐Risk models with Firth's Augmentation
+#' Maximum Likelihood Estimation for Relative<U+2010>Risk models with Firth's Augmentation
 #'
 #' Firth's method: Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika, 80(1), 27-38.
 #' In the middle of page 29, the first-order bias of \hat{\theta}.
-#' Optimize the log‐likelihood for a binary‐outcome regression model on the
-#' relative‐risk (RR) scale using an iterative
+#' Optimize the log<U+2010>likelihood for a binary<U+2010>outcome regression model on the
+#' relative<U+2010>risk (RR) scale using an iterative
 #' augmentation scheme.
 #'
 #' @param param Character string, takes\code{"RR"}
@@ -27,7 +27,7 @@
 
 max.likelihood.firth.rr <- function(param, y, x, va, vb, alpha.start, beta.start, weight, max.step, thres, pa, pb) {
   ### augmentation calculation, calculate the observed values of
-  # κ_{r,s}  = n^{-1} * E{ U_r, U_s }, κ_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }, and κ_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}
+  # <U+03BA>_{r,s}  = n^{-1} * E{ U_r, U_s }, <U+03BA>_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }, and <U+03BA>_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}
   # with va and vb all equal to 1
   compute.components <- function(x, alpha.ml, beta.ml, va, vb, weight) {
     p0p1 <- getProbRR(va %*% alpha.ml, vb %*% beta.ml)
@@ -37,6 +37,10 @@ max.likelihood.firth.rr <- function(param, y, x, va, vb, alpha.start, beta.start
     n <- nrow(vb)
     pA <- p0
     pA[x == 1] <- p1[x == 1]
+    eps <- 1e-8
+    p0 <- pmin(pmax(p0, eps), 1 - eps)
+    p1 <- pmin(pmax(p1, eps), 1 - eps)
+    pA <- pmin(pmax(pA, eps), 1 - eps)
 
 
     ### Building blocks
@@ -88,7 +92,7 @@ max.likelihood.firth.rr <- function(param, y, x, va, vb, alpha.start, beta.start
     ###
 
 
-    ##  fisher info κ_{r,s}
+    ##  fisher info <U+03BA>_{r,s}
     expect.dl.by.dpsi0.squared <- (pA) / (1 - pA)
     dpsi0.by.dphi <- (1 - p0) * (1 - p1) / ((1 - p0) + (1 - p1))
     dpsi0.by.dtheta <- -(1 - p0) / ((1 - p0) + (1 - p1))
@@ -118,12 +122,12 @@ max.likelihood.firth.rr <- function(param, y, x, va, vb, alpha.start, beta.start
     k.b.bb <- as.vector(c.stu.beta * d2l.by.dbeta.2)
 
 
-    return(list(fisher = fisher.info, fisher.invers = solve(fisher.info), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info, fisher.invers = ginv(fisher.info / n), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
 
 
   #' @param components A list as returned by \code{\link{compute.components}}.
-  ### calculate κ^{r,s} κ^{t,u} (κ_{s,t,u} + κ_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
+  ### calculate <U+03BA>^{r,s} <U+03BA>^{t,u} (<U+03BA>_{s,t,u} + <U+03BA>_{s,tu}) / 2 with real va and vb. Since it is all the possible combinations of va and vb,I use "for"
 
   compute.augmentation <- function(components, va, vb) {
     pa <- ifelse(is.null(dim(va)), 1, dim(va)[2])

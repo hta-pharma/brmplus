@@ -1,4 +1,4 @@
-#' Calculate the variance–covariance matrix of MLEs for the relative risk (RR) model and the riskdifference (RD) model
+#' Calculate the variance<U+2013>covariance matrix of MLEs for the relative risk (RR) model and the riskdifference (RD) model
 #'
 #' This function computes the inverse of the observed Fisher information matrix
 
@@ -10,7 +10,7 @@
 #' @param vb Numeric matrix of dimension \code{n \times p_b}. Design matrix for the \code{\beta} component.
 #' @param weights Numeric vector of length \code{n}. Observation weights.
 #'
-#' @return A \code{p}-by-\code{p} matrix (\code{p = length(alpha.ml) + length(beta.ml)}), the variance–covariance matrix of the MLEs).
+#' @return A \code{p}-by-\code{p} matrix (\code{p = length(alpha.ml) + length(beta.ml)}), the variance<U+2013>covariance matrix of the MLEs).
 #'
 #' need the package "MASS"
 

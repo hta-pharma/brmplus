@@ -76,7 +76,7 @@ bayes_est_RR <- function(Na0, Na1, N0_1, N1_1, a1 = .5, b1 = .5, a0 = .5, b0 = .
   list(
     point.est = mean(alpha), se.est = sd, conf.lower = min(et),
     conf.upper = max(et), ET = et, HPD = hpd,
-    p.value = mean(d > 0)
+    p.value = mean(d > 1)
   )
 }
 
@@ -117,24 +117,29 @@ var.est.RD <- function(li, p0, p1) {
   return((cov[1, 1] + cov[2, 2] - 2 * cov[1, 2]))
 }
 
-m <- function(x) {
-  exp(x) / (1 + exp(x))
-}
+m <- function(x) plogis(x)
 m.prime <- function(x) {
-  exp(x) / (1 + exp(x))^2
-}
-m.prime.prime <- function(x) {
-  exp(x) * (1 - exp(x)) / (1 + exp(x))^3
+  s <- plogis(x)
+  s * (1 - s)
 }
 
+m.prime.prime <- function(x) {
+  s <- plogis(x)
+  s * (1 - s) * (1 - 2 * s)
+}
+
+
 fish <- function(x, beta) {
-  t(x) %*% diag(as.vector(m.prime(x %*% beta))) %*% x / nrow(x)
+  eta <- drop(x %*% beta)
+  w <- m.prime(eta) # length n
+  # Equivalent to t(x) %*% diag(w) %*% x.
+  crossprod(x * w, x) / nrow(x)
 }
 hii <- function(x, beta) {
   m.prime(x %*% beta) * rowSums(x %*% ginv(nrow(x) * fish(x, beta)) * x)
 }
 phi <- function(y, x, beta, p) {
-  x %*% ginv(fish(x, beta)) * as.vector(y - m(x %*% beta)) / p
+  x %*% ginv(fish(x, beta)) * as.vector(y - m(x %*% beta))
 }
 
 #' Transform point/SE/CI for RD to Fisher-z scale

@@ -1,4 +1,4 @@
-#' Penalized Maximum‐Likelihood Estimation
+#' Penalized Maximum<U+2010>Likelihood Estimation
 #'
 #' Penalizing the log-likelihood function with the Jeffry's prior, but with the prior directly applied to p0,p1
 #'
@@ -25,7 +25,7 @@ fisher.detf <- function(param, x, alpha.ml, beta.ml, va, vb, weight) {
 }
 
 
-#' Penalized Maximum‐Likelihood Estimation
+#' Penalized Maximum<U+2010>Likelihood Estimation
 #'
 #' Penalizing the log-likelihood function with the Jeffry's prior, but with the prior directly applied to p0,p1
 #'

@@ -1,9 +1,9 @@
-#' Maximum Likelihood Estimation for Risk‐Difference models with Firth's Augmentation
+#' Maximum Likelihood Estimation for Risk<U+2010>Difference models with Firth's Augmentation
 #'
 #' Firth's method: Firth, D. (1993). Bias reduction of maximum likelihood estimates. Biometrika, 80(1), 27-38.
 #'
-#' Optimize the log‐likelihood for a binary‐outcome regression model on the
-#' risk‐difference (RD) scale using an iterative augmentation scheme.
+#' Optimize the log<U+2010>likelihood for a binary<U+2010>outcome regression model on the
+#' risk<U+2010>difference (RD) scale using an iterative augmentation scheme.
 #'
 #' @param param Character string, takes\code{"RD"}
 #'
@@ -32,8 +32,8 @@ max.likelihood.firth.rd <- function(param, y, x, va, vb, alpha.start, beta.start
   ### augmentation calculation, compute:
   #'   - the observed Fisher information matrix,
   #'   - its inverse,
-  #'   - third‐order cumulants \(k_{s t u}\),  κ_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }
-  #'   - mixed cumulants \(k_{s, t u}\), κ_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}.
+  #'   - third<U+2010>order cumulants \(k_{s t u}\),  <U+03BA>_{s,t,u} = n^{-1} * E{ U_s, U_t, U_u }
+  #'   - mixed cumulants \(k_{s, t u}\), <U+03BA>_{s,tu}  = n^{-1} * E{ U_s, U_{tu}}.
   #'
   compute.components <- function(x, alpha.ml, beta.ml, va, vb, weight) {
     p0p1 <- getProbRD(va %*% alpha.ml, vb %*% beta.ml) # n by 2
@@ -126,7 +126,7 @@ max.likelihood.firth.rd <- function(param, y, x, va, vb, alpha.start, beta.start
     fisher.info <- (t(expect.dl.by.dpA.squared * weight * tmp) %*% tmp)
 
 
-    return(list(fisher = fisher.info, fisher.invers = ginv(fisher.info), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
+    return(list(fisher = fisher.info, fisher.invers = ginv(fisher.info / n), k.stu = cbind(k.aaa, k.aab, k.abb, k.bbb), k.s.tu = cbind(k.a.aa, k.a.ab, k.a.bb, k.b.aa, k.b.ab, k.b.bb)))
   }
 
   compute.augmentation <- function(components, va, vb) {

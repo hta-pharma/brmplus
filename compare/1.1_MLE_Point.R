@@ -5,8 +5,8 @@
 #' @param param Character. Specifies the model type: use \code{"RR"} for relative risk , use \code{"RD"} for risk difference.
 #' @param y Numeric vector. Binary response variable (0/1) of length \code{n}.
 #' @param x Numeric. Group indicator (0/1) of length \code{n}.
-#' @param va Numeric matrix. Design matrix for the \code{alpha} parameters (dimensions \code{n} × \code{pa}).
-#' @param vb Numeric matrix. Design matrix for the \code{beta} parameters (dimensions \code{n} × \code{pb}).
+#' @param va Numeric matrix. Design matrix for the \code{alpha} parameters (dimensions \code{n} <U+00D7> \code{pa}).
+#' @param vb Numeric matrix. Design matrix for the \code{beta} parameters (dimensions \code{n} <U+00D7> \code{pb}).
 #' @param alpha.start Numeric vector of length \code{pa}. Initial values for the \code{alpha} parameters.
 #' @param beta.start Numeric vector of length \code{pb}. Initial values for the \code{beta} parameters.
 #' @param weight Numeric vector of length \code{n}. Observation weight.
